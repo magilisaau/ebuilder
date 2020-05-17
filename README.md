@@ -1,2 +1,2 @@
 # minecraft_buildAssistant
-a visualizing lib/tool which assist minecraft game player to build buildings rapidly, shorten 90% time
+a visualizing lib/tool which assists minecraft game player to build house rapidly, shorten 90% time
