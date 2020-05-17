@@ -1,16 +1,88 @@
 '''
 Author: Magi
 Contact: magilisaau@gmail.com
+CreateTime: 2020/04/20
 ModifyTime: 2020/5/10
-Description: 
+Description: the project is to help kids build house more efficiently and easily in the game minecraft
+
+Author: Magi
+Contact: magilisaau@gmail.com
+ModifyTime: 2020/5/17
+Description: bug fix, clear marks after clear/cube/hollowcube
 '''
+#help info
+def help_ui():
+    player.say("---right-click the block below to build---")
+    player.say("GOLDEN BOOTS:   add a mark")
+    player.say("GOLDEN SHOVEL:  remove last mark or del one level")
+    player.say("GOLDEN SWORD:   build wall or add one level")
+    player.say("GOLDEN LEGGINGS: reset all marks")
+    player.say("GOLDEN CARROT:  choose the block under the player's feet")
+    player.say("GOLDEN APPLE:   replace the old block to the new one under the player's feet")
+    player.say("GOLDEN CHESTPLATE: clone to the place where the player is standing")
 
-
-################################ section one #################################################
+def on_help():
+    cmd_all=["mark","umark","reset","wall","addlevel","dellevel","clone","clear","setblock","blkmap","dbg","cube","hollowcube","plant","demo"]
+    cmd_detail=[
+        ["mark","mark the position where the player is standing"],
+        ["umark","remove the last mark"],
+        ["reset","commit changes and clear all marks"],
+        ["wall","build walls between every two adjacent marks"],
+        ["addlevel","build one more level of floor from marks"],
+        ["dellevel","del the last level of floor"],
+        ["clone","clone the cube space enclosed by all marks"],
+        ["clear","clear the cube space enclosed by all marks"],
+        ["setblock","setblock [id]: choose block [id] as building material"],
+        ["blkmap","show a block map"],
+        ["dbg","show all marks of different level"],
+        ["cube","build solid cube from marks"],
+        ["hollowcube","build hollow cube from marks"],
+        ["plant","plant [tree] [interval]: plant trees on the groud from marks, interval between trees"],
+        ["demo","run a demo to build a wall"]
+    ]
+    arg = player.get_chat_arg(0)
+    if arg==None:
+        player.say("--- cmd list, type T to open chat window---")
+        for x in cmd_all:
+            player.say(x)
+        player.say("---type help [cmd] for cmd detail---")
+        player.say("---type help ui for user interface---")
+    elif arg=="ui":
+        help_ui()
+    else:
+        for i in range(len(cmd_detail)):
+            if cmd_detail[i][0]==arg:
+                player.say(cmd_detail[i][1])
+                return
+        player.say("invalid cmd")
+    pass
+player.on_chat("help", on_help)
+################################ section one: lib #################################################
 '''
 section one are fundermental lib for process one-level marks
 the functions in section one can only be called by section two and section three
 the functions in section one can NOT call the functions in section two and section three
+'''
+'''
+**NOTE: microsoft minecraft python doesn't support python class well till now, so we have to use functions
+        and minecraft python only support static python syntax, not all python2.x/python3.x syntax can be used
+
+detect_block_on_foot(marks)         :get the id of the block under the foot of the player
+detect_block_at_pos(marks,pos)      :get the id of the block at the position of pos
+add_build_line(marks,pos)           :build a auxiliary line at the position of pos
+del_build_line(marks,pos)           :del the auxiliary line at the position of pos
+get_enclosure_from_marks(marks)     :get the cube area enclosed by the marks which previous added
+def get_relative_pos(marks,orient,origin,dir): given the origin position and the orientation, get the coordinate in the direction of LEFT/RIGHT/FORWARD/BACK/UP/DOWN
+push_mark(marks,pos)                :add a new mark
+pop_mark(marks)                     :remove the last added mark
+clear_marks(marks)                  :clear all marks previous added
+build_wall_from_marks(marks,block)  :build walls according to the previously marks,using block as materials
+clone_from_marks(marks,into,align)  :clone the cube space enclosed by the marks [into] a new place, if align is True, it will align automaticlly with the origin area
+replace_from_marks(marks,newblk, oldblk):replace the old block to new block in the cube space enclosed by the marks 
+clear_from_marks(marks)             :clear the cube space enclosed by the marks 
+build_cube_from_marks(marks)        :build a solid cube according to the previously marks
+build_hollow_cube_from_marks(marks) :like build_cube_from_marks() do, but a hollow cube
+plant_trees_from_marks(marks,tree,interval):plant [trees] in the projective region of the marks on the ground, every [interval] distance
 '''
 def detect_block_on_foot():
     agent.teleport_to_player()
@@ -72,8 +144,8 @@ def get_enclosure_from_marks(marks):
     return [world(x1, y1, z1), world(x2, y2, z2)]
 
 # add mark
-def push_mark(marks=[pos(0, 0, 0)]):
-    curpos = player.position()
+def push_mark(marks=[pos(0,0,0)],curpos:Position=player.position()):
+    #curpos = player.position()
     marks.append(curpos)
     add_build_line(curpos)
     blocks.place(mark_blk, curpos)
@@ -96,7 +168,7 @@ def pop_mark(marks=[pos(0, 0, 0)]):
     marks.pop()
 
 # build wall from a serial of adjacent marks
-def build_wall_from_marks(marks=[pos(0, 0, 0)], block=GRASS, high: int = 0):
+def build_wall_from_marks(marks=[pos(0, 0, 0)], block=GRASS):
     size = len(marks)
     if size < 2: return False
     start = marks[0]
@@ -201,55 +273,110 @@ def build_hollow_cube_from_marks(marks,block:number):
     end = closure[1]
     blocks.fill(block, start, end,FillOperation.HOLLOW)
     pass
-################################ section two ###################################################
+
+def plant_trees_from_marks(marks=[],tree:number=ACACIA_SAPLING,interval:number=2):
+    if len(marks) < 2: return
+    closure = get_enclosure_from_marks(marks)
+    start=pos(0,0,0)
+    end=pos(0,0,0)
+    start = closure[0]
+    end = closure[1]
+    x1 = start.get_value(Axis.X); x2 = end.get_value(Axis.X)
+    y1 = start.get_value(Axis.Y); y2 = end.get_value(Axis.Y)
+    z1 = start.get_value(Axis.Z); z2 = end.get_value(Axis.Z)
+    for x in range(x1,x2,interval):
+        for z in range(z1,z2,interval):
+            where = positions.ground_position(world(x,y2,z))
+            blocks.place(tree,where)
+################################ section two, command line interface ##############################################
+'''
+on_mark()->void                 :add the position where the player stands as a new mark
+on_unmark()->void               :del the last added mark
+on_build_wall()->void           :build wall according to the marks previously added, a wall each two adjacent marks
+on_build_cube()->void           :build a solid cube according to the marks previously added
+on_build__hollow_cube()->void   :build a hollow cube according to the marks previously added
+on_reset()->void                :clear all marks previous added
+on_add_one_level()->void        :if current marksqueue not empty, build a new level of wall just on the old level
+on_del_one_level()->void        :clear the current level of wall
+on_clone()->void                :clone the cube space enclosed bye the marks to a new place where the player stands
+on_clear()->                    :clear the cube space enclosed bye the marks to a new place where the player stands
+on_plant()->void                :plant trees or weeds in the ground area which is enclosed by the marks
+on_setblk(int)->void            :set the building block type
+'''
+
+# 05-17,magi£¬because minecraft doesn't provide threading.Lock, we need to simulate one, maybe sometime it will failed,but can go in most cases
+class TestBit:
+    lock=0
+def acquire():
+    while(TestBit.lock): loops.pause(50)
+    TestBit.lock=1
+def release():
+    TestBit.lock=0
+
 def on_mark():
+    acquire()
     if BuildState.buildstate==BuildState.DONE: 
         on_reset()         
-    push_mark(marksarray[len(marksarray) - 1])
+    push_mark(marksarray[len(marksarray) - 1],player.position())
+    release()
 def on_mark_handle():
     on_mark()
 player.on_chat("mark", on_mark_handle)
 
 #
 def on_unmark():
+    acquire()
     if BuildState.buildstate==BuildState.READY:
         pop_mark(marksarray[len(marksarray) - 1])
+        release()
     if BuildState.buildstate==BuildState.DONE:
+        release()
         on_del_one_level(1)
+    
 
 def on_unmark_handle():
     on_unmark()
 player.on_chat("unmark", on_unmark_handle)
 
 #
-def on_build_wall(high: int = 1):
+def on_build_wall():
+    acquire()
     if BuildState.buildstate==BuildState.READY:
         size = len(marksarray)
         marks = marksarray[size - 1]
         if len(marks)<2: return
-        build_wall_from_marks(marks, block, high)
+        build_wall_from_marks(marks, block)
         BuildState.buildstate=BuildState.DONE
+        release()
+
     elif BuildState.buildstate==BuildState.DONE:
+        release()#because acquire will be called also in on_add_one_level,so release here
         on_add_one_level()
 
-def on_build_wall_handle(high: int = 0):
-    on_build_wall(high)
+def on_build_wall_handle():
+    on_build_wall()
 player.on_chat("wall", on_build_wall_handle)
 
 def on_build_cube():
+    acquire()
     size = len(marksarray)
     marks = marksarray[size - 1]
     if len(marks)<2: return 
     build_cube_from_marks(marks,block)
+    release()
+    on_reset()
 def on_build_cube_handle(high: int = 0):
     on_build_cube()
 player.on_chat("cube", on_build_cube_handle)
 
 def on_build__hollow_cube():
+    acquire()
     size = len(marksarray)
     marks = marksarray[size - 1]
     if len(marks)<2: return 
     build_hollow_cube_from_marks(marks,block)
+    release()
+    on_reset()
 def on_build__hollow_cube_handle(high: int = 0):
     on_build__hollow_cube()
 player.on_chat("hollowcube", on_build__hollow_cube_handle)
@@ -257,6 +384,7 @@ player.on_chat("hollowcube", on_build__hollow_cube_handle)
 #
 def on_reset():
     global marksarray
+    acquire()
     if BuildState.buildstate==BuildState.READY:
         marks=marksarray[len(marksarray)-1]
         for x in marks: del_build_line(x)
@@ -266,6 +394,7 @@ def on_reset():
     temp = marksarray[0]
     temp.pop()
     BuildState.buildstate=BuildState.READY
+    release()
 def on_reset_handle():
     on_reset()
 player.on_chat("reset", on_reset_handle)
@@ -276,6 +405,7 @@ player.on_chat("showblock", on_show_block)
 
 # process add one level cmd
 def on_add_one_level():
+    acquire()
     marks = marksarray[len(marksarray) - 1]
     if len(marks)==0: return
     floor = pos(0, 0, 0)
@@ -289,33 +419,62 @@ def on_add_one_level():
     for x in marks:
         newmarks.append(x.add(pos(0, dy, 0)))
     marksarray.append(newmarks)
-    build_wall_from_marks(newmarks,block,1)
-
+    build_wall_from_marks(newmarks,block)
+    release()
 def on_add_one_level_handle():
     on_add_one_level()
 player.on_chat("addlevel", on_add_one_level_handle)
 
 #process del one level cmd
 def on_del_one_level(high: int = 0):
+    acquire()
     marks= marksarray[len(marksarray) - 1]
-    build_wall_from_marks(marks,AIR,1)
+    build_wall_from_marks(marks,AIR)
     if len(marksarray) >1:
         marksarray.pop()
     else:
         clear_marks(marks)
+    release()
 def on_del_one_level_handle():
     on_del_one_level()
 player.on_chat("dellevel", on_del_one_level_handle)
 
 #process clone from marks cmd
 def on_clone():
+    acquire()
     newpos =clone_from_marks(marksarray[len(marksarray) - 1])
     if newpos: player.teleport(newpos)
     player.say("clone")
+    release()
 
 def on_clone_handle():
     on_clone()
 player.on_chat("clone", on_clone_handle)
+
+
+#process clone from marks cmd
+def on_clear():
+    acquire()
+    clear_from_marks(marksarray[len(marksarray)-1])
+    release()
+    on_reset()#remove marks after clear done
+
+def on_clear_handle():
+    on_clear()
+player.on_chat("clear", on_clear_handle)
+
+#plant_from_marks
+def on_plant(tree,interval):
+    acquire()
+    plant_trees_from_marks(marksarray[len(marksarray) - 1],tree,interval)
+    release()
+    on_reset()
+    pass
+def on_plant_handle(tree,interval):
+    if tree==0: tree=ACACIA_SAPLING
+    if interval==0: interval=4
+    on_plant(tree,interval)
+player.on_chat("plant", on_plant_handle)
 
 # config the type of block to build
 def on_set_blk(blk:int):
@@ -356,33 +515,7 @@ def on_show_block_map():
             blocks.place(i * 10 + j, start.add(pos(2 * i + 2 * i // 10, -1, 2 * j)))
 player.on_chat("blkmap", on_show_block_map)
 
-#help info
-def on_help():
-    player.say("----------use chat command to build-------------")
-    player.say("buildmode [0/1]: OFF/ON")
-    player.say("mark: mark a position to build")
-    player.say("umark: unmark the last position")
-    player.say("reset: commit changes and clear all marks")
-    player.say("wall: build wall between adjacent marks")
-    player.say("clone: clone everything enclosed by all marks")
-    player.say("setblock [id]: choose block [id] as building material")
-    player.say("addlevel: build one more level of floor from marks ")
-    player.say("dellevel: del one level of floor from marks ")   
-    player.say("blkmap: show a block map ") 
-    player.say("dbg: show all marks of different level ")
-    player.say("cube: build solid cube from marks")
-    player.say("hollowcube: build hollow cube from marks")
-    
-    if check_build_mode():
-        player.say("----------interacte with block to build -------------")
-        player.say("use [GOLDEN      BOOTS] to mark")
-        player.say("use [GOLDEN     SHOVEL] to unmark")
-        player.say("use [GOLDEN      SWORD] to build wall")
-        player.say("use [DIAMOND  LEGGINGS] to reset all marks")
-        player.say("use [GOLDEN CHESTPLATE] to clone everything enclosed by all marks")
-    player.say("--- by Magi, magilisaau@gmail.com, 2020 ---")
 
-player.on_chat("help", on_help)
 
 class BuildState:
     buildstate=0
@@ -403,8 +536,8 @@ mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SWORD, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SHOVEL, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_CARROT, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_APPLE, 1)
-
-######################################### section three ################################################################
+mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_CHESTPLATE, 1)
+######################################### section three, user interface ##################################################
 '''
     section three can call functions in section one and section two, but can NOT be called by section one and section two
 '''
@@ -429,13 +562,6 @@ def on_item_interacted_wall():
     #player.run_chat_command("build")
     player.say("wall build")
 player.on_item_interacted(GOLDEN_SWORD, on_item_interacted_wall)
-
-def on_item_interacted_destroy():
-    if not check_build_mode(): return
-    on_del_one_level(1)
-    #player.run_chat_command("dellevel")
-    player.say("wall destroyed")
-player.on_item_interacted(DIAMOND_SHOVEL, on_item_interacted_destroy)
 
 
 def on_item_interacted_reset():
@@ -474,59 +600,49 @@ player.on_item_interacted(GOLDEN_APPLE, on_item_interacted_replace)
 ######################  section four, a demo to build house using chat command ##############################
 def demo():
     player.run_chat_command("setblock 155")
-    player.run_chat_command("mark")
-    loops.pause(500)
-    player.teleport(pos(48,0,0))
-    loops.pause(100)
-    player.run_chat_command("mark")
-    loops.pause(500)
-    player.teleport(pos(0,1,0))
-    player.run_chat_command("wall")
-    loops.pause(500)
-    player.teleport(pos(0,1,0))
-    loops.pause(100)
-    player.run_chat_command("addlevel")    
-    loops.pause(500)  
-    player.teleport(pos(0,1,0))
-    loops.pause(100)
-    player.run_chat_command("addlevel")  
-    loops.pause(500)  
-    player.teleport(pos(0,1,0))
-    loops.pause(100)
-    player.run_chat_command("addlevel")       
-    loops.pause(500)      
-    player.teleport(pos(0,1,0))
-    loops.pause(100)
-    player.run_chat_command("addlevel") 
-    loops.pause(500)  
-    player.run_chat_command("reset") 
-    loops.pause(500)
-    player.run_chat_command("mark")
-    loops.pause(500)
+    #player.run_chat_command("mark")
+    on_mark()
+    player.teleport(pos(48,0,0)) 
+    #player.run_chat_command("mark")
+    on_mark()
+    player.teleport(pos(0,1,0));   
+    #player.run_chat_command("wall")
+    on_build_wall()
+    player.teleport(pos(0,1,0));   
+    #player.run_chat_command("addlevel")  
+    on_add_one_level() 
+    player.teleport(pos(0,1,0));   
+    #player.run_chat_command("addlevel")  
+    on_add_one_level() 
+    player.teleport(pos(0,1,0));   
+    #player.run_chat_command("addlevel")     
+    on_add_one_level() 
+    player.teleport(pos(0,1,0));   
+    #player.run_chat_command("addlevel")  
+    on_add_one_level() 
+    #player.run_chat_command("reset") 
+    on_reset()
+    #player.run_chat_command("mark")
+    on_mark()
     for i in range(6):
-        player.teleport(pos(0,1,0))
-        loops.pause(100)
-        player.run_chat_command("mark")
-        loops.pause(500)
-
-        player.teleport(pos(-4,0,0))
-        loops.pause(100)
-        player.run_chat_command("mark")
-        loops.pause(500)
-
-        player.teleport(pos(0,-1,0))
-        loops.pause(100)
-        player.run_chat_command("mark")
-        loops.pause(500)
-
-        player.teleport(pos(-4,0,0))
-        loops.pause(100)
-        player.run_chat_command("mark")
-        loops.pause(500)
-    player.run_chat_command("wall")
-    loops.pause(1000)
-    player.run_chat_command("reset")
+        player.teleport(pos(0,1,0));   
+        #player.run_chat_command("mark")
+        on_mark()
+        player.teleport(pos(-4,0,0));   
+        #player.run_chat_command("mark")
+        on_mark()
+        player.teleport(pos(0,-1,0));   
+        #player.run_chat_command("mark")
+        on_mark()
+        player.teleport(pos(-4,0,0));   
+        #player.run_chat_command("mark")
+        on_mark()
+    #player.run_chat_command("wall")
+    on_build_wall()
+    #player.run_chat_command("reset")
+    on_reset()
 
 def on_demo():
     demo()
 player.on_chat("demo",on_demo)
+
