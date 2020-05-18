@@ -316,8 +316,12 @@ def release():
 def on_mark():
     acquire()
     if BuildState.buildstate==BuildState.DONE: 
-        on_reset()         
+        release()
+        on_reset()    
+        acquire()     
     push_mark(marksarray[len(marksarray) - 1],player.position())
+    #2020-05-18 Magi
+    mobs.apply_effect(Effect.HASTE, mobs.target(LOCAL_PLAYER),600)
     release()
 def on_mark_handle():
     on_mark()
@@ -327,11 +331,15 @@ player.on_chat("mark", on_mark_handle)
 def on_unmark():
     acquire()
     if BuildState.buildstate==BuildState.READY:
-        pop_mark(marksarray[len(marksarray) - 1])
+        marks = marksarray[len(marksarray) - 1]
+        pop_mark(marks)
+        if(len(marks)==0): 
+            #2020-05-18,Magi
+            mobs.clear_effect(mobs.target(LOCAL_PLAYER))
         release()
     if BuildState.buildstate==BuildState.DONE:
         release()
-        on_del_one_level(1)
+        on_del_one_level()
     
 
 def on_unmark_handle():
@@ -344,9 +352,9 @@ def on_build_wall():
     if BuildState.buildstate==BuildState.READY:
         size = len(marksarray)
         marks = marksarray[size - 1]
-        if len(marks)<2: return
-        build_wall_from_marks(marks, block)
-        BuildState.buildstate=BuildState.DONE
+        if len(marks)>=2: 
+            build_wall_from_marks(marks, block)
+            BuildState.buildstate=BuildState.DONE
         release()
 
     elif BuildState.buildstate==BuildState.DONE:
@@ -364,7 +372,7 @@ def on_build_cube():
     if len(marks)<2: return 
     build_cube_from_marks(marks,block)
     release()
-    on_reset()
+    #on_reset()
 def on_build_cube_handle(high: int = 0):
     on_build_cube()
 player.on_chat("cube", on_build_cube_handle)
@@ -376,7 +384,7 @@ def on_build__hollow_cube():
     if len(marks)<2: return 
     build_hollow_cube_from_marks(marks,block)
     release()
-    on_reset()
+    #on_reset()
 def on_build__hollow_cube_handle(high: int = 0):
     on_build__hollow_cube()
 player.on_chat("hollowcube", on_build__hollow_cube_handle)
@@ -387,13 +395,13 @@ def on_reset():
     acquire()
     if BuildState.buildstate==BuildState.READY:
         marks=marksarray[len(marksarray)-1]
-        for x in marks: del_build_line(x)
-    marksarray = [[pos(0, 0, 0), ], ]
-    #stupid code below by magi,2020.5.10
-    temp = [pos(0, 0, 0)]
-    temp = marksarray[0]
-    temp.pop()
+        for p in marks: del_build_line(p)
+    for x in marksarray:
+        clear_marks(x)
+    while(len(marksarray)>1): marksarray.pop()
     BuildState.buildstate=BuildState.READY
+    #2020-05-18
+    mobs.clear_effect(mobs.target(LOCAL_PLAYER))
     release()
 def on_reset_handle():
     on_reset()
@@ -426,15 +434,17 @@ def on_add_one_level_handle():
 player.on_chat("addlevel", on_add_one_level_handle)
 
 #process del one level cmd
-def on_del_one_level(high: int = 0):
+def on_del_one_level():
     acquire()
     marks= marksarray[len(marksarray) - 1]
     build_wall_from_marks(marks,AIR)
+    clear_marks(marks)
     if len(marksarray) >1:
         marksarray.pop()
     else:
-        clear_marks(marks)
+        mobs.clear_effect(mobs.target(LOCAL_PLAYER))
     release()
+    
 def on_del_one_level_handle():
     on_del_one_level()
 player.on_chat("dellevel", on_del_one_level_handle)
@@ -527,7 +537,7 @@ class BuildState:
 marksarray = [[pos(0, 0, 0), ], ]
 block = GRASS
 buildmode = 1 
-# I don't why can't use marksarray[0].pop(), so I wrote such stupid code below
+# I don't know why can't use marksarray[0].pop(), so I wrote such stupid code below
 temp = [pos(0, 0, 0)]
 temp = marksarray[0]
 temp.pop()
