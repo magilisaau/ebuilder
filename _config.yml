@@ -1,0 +1,6 @@
+makecode:
+  target: minecraft
+  platform: minecraft
+  home_url: https://minecraft.makecode.com/
+theme: jekyll-theme-slate
+include: assets
