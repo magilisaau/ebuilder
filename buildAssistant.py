@@ -304,7 +304,7 @@ on_plant()->void                :plant trees or weeds in the ground area which i
 on_setblk(int)->void            :set the building block type
 '''
 
-# 05-17,magi£¬because minecraft doesn't provide threading.Lock, we need to simulate one, maybe sometime it will failed,but can go in most cases
+# 05-17,magi??because minecraft doesn't provide threading.Lock, we need to simulate one, maybe sometime it will failed,but can go in most cases
 class TestBit:
     lock=0
 def acquire():
@@ -369,8 +369,7 @@ def on_build_cube():
     acquire()
     size = len(marksarray)
     marks = marksarray[size - 1]
-    if len(marks)<2: return 
-    build_cube_from_marks(marks,block)
+    if len(marks)>1: build_cube_from_marks(marks,block)
     release()
     #on_reset()
 def on_build_cube_handle(high: int = 0):
@@ -381,8 +380,7 @@ def on_build__hollow_cube():
     acquire()
     size = len(marksarray)
     marks = marksarray[size - 1]
-    if len(marks)<2: return 
-    build_hollow_cube_from_marks(marks,block)
+    if len(marks)>1: build_hollow_cube_from_marks(marks,block)
     release()
     #on_reset()
 def on_build__hollow_cube_handle(high: int = 0):
@@ -415,7 +413,9 @@ player.on_chat("showblock", on_show_block)
 def on_add_one_level():
     acquire()
     marks = marksarray[len(marksarray) - 1]
-    if len(marks)==0: return
+    if len(marks)==0: 
+        release()
+        return
     floor = pos(0, 0, 0)
     ceil = pos(0, 0, 0)
     closure = get_enclosure_from_marks(marks)
@@ -549,7 +549,7 @@ mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_APPLE, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_CHESTPLATE, 1)
 ######################################### section three, user interface ##################################################
 '''
-    section three can call functions in section one and section two, but can NOT be called by section one and section two
+section three can call functions in section one and section two, but can NOT be called by section one and section two
 '''
 def on_item_interacted_mark():
     if not check_build_mode(): return
@@ -635,7 +635,7 @@ def demo():
     #player.run_chat_command("mark")
     on_mark()
     for i in range(6):
-        player.teleport(pos(0,1,0));   
+        player.teleport(pos(0,1,0));
         #player.run_chat_command("mark")
         on_mark()
         player.teleport(pos(-4,0,0));   
