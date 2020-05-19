@@ -632,7 +632,7 @@ def demo():
     on_add_one_level() 
     #player.run_chat_command("reset") 
     on_reset()
-    #player.run_chat_command("mark")
+    #player.run_chat_command("mark") 
     on_mark()
     for i in range(6):
         player.teleport(pos(0,1,0));
