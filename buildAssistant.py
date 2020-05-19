@@ -32,6 +32,7 @@ def on_help():
         ["dellevel","del the last level of floor"],
         ["clone","clone the cube space enclosed by all marks"],
         ["clear","clear the cube space enclosed by all marks"],
+        ["replace","replace the blocks enclosed by all marks to new blocks"],        
         ["setblock","setblock [id]: choose block [id] as building material"],
         ["blkmap","show a block map"],
         ["dbg","show all marks of different level"],
@@ -299,7 +300,8 @@ on_reset()->void                :clear all marks previous added
 on_add_one_level()->void        :if current marksqueue not empty, build a new level of wall just on the old level
 on_del_one_level()->void        :clear the current level of wall
 on_clone()->void                :clone the cube space enclosed bye the marks to a new place where the player stands
-on_clear()->                    :clear the cube space enclosed bye the marks to a new place where the player stands
+on_clear()->void                :clear the cube space enclosed bye the marks to a new place where the player stands
+on_replace()->void              :replace the old blocks in the cube enclosed bye the marks to new blocks
 on_plant()->void                :plant trees or weeds in the ground area which is enclosed by the marks
 on_setblk(int)->void            :set the building block type
 '''
@@ -369,7 +371,7 @@ def on_build_cube():
     acquire()
     size = len(marksarray)
     marks = marksarray[size - 1]
-    if len(marks)>1: build_cube_from_marks(marks,block)
+    if len(marks)>=2: build_cube_from_marks(marks,block)
     release()
     #on_reset()
 def on_build_cube_handle(high: int = 0):
@@ -380,7 +382,7 @@ def on_build__hollow_cube():
     acquire()
     size = len(marksarray)
     marks = marksarray[size - 1]
-    if len(marks)>1: build_hollow_cube_from_marks(marks,block)
+    if len(marks)>=2: build_hollow_cube_from_marks(marks,block)
     release()
     #on_reset()
 def on_build__hollow_cube_handle(high: int = 0):
@@ -473,6 +475,24 @@ def on_clear_handle():
     on_clear()
 player.on_chat("clear", on_clear_handle)
 
+
+def on_replace():
+    global block
+    acquire()
+    newblk =detect_block_on_foot()
+    marks = marksarray[len(marksarray) - 1]
+    if len(marks) >=2: 
+        replace_from_marks(marks,newblk,block)
+        block=newblk
+    release()
+
+def on_replace_handle():
+        on_replace()
+player.on_chat("replace", on_replace_handle)
+
+'''
+
+'''
 #plant_from_marks
 def on_plant(tree,interval):
     acquire()
@@ -598,13 +618,8 @@ player.on_item_interacted(GOLDEN_CARROT, on_item_interacted_pick_block)
 
 
 def on_item_interacted_replace():
-    global block
-    newblk =detect_block_on_foot()
-    marks = marksarray[len(marksarray) - 1]
-    if len(marks)<2: return
-    replace_from_marks(marks,newblk,block)
-    player.say("replace block:"+str(block))
-    block=newblk
+    on_replace()
+    player.say("replace")
 player.on_item_interacted(GOLDEN_APPLE, on_item_interacted_replace)
 
 ######################  section four, a demo to build house using chat command ##############################
@@ -656,3 +671,4 @@ def on_demo():
     demo()
 player.on_chat("demo",on_demo)
 
+ 
