@@ -144,9 +144,21 @@ def get_enclosure_from_marks(marks):
             z2 = mark.get_value(Axis.Z)
     return [world(x1, y1, z1), world(x2, y2, z2)]
 
+def place_on_enclosure_top(marks=[pos(0,0,0)]):
+    closure = get_enclosure_from_marks(marks)
+    start =pos(0,0,0)
+    end =pos(0,0,0)
+    start = closure[0]
+    end = closure[1]
+    x1 = start.get_value(Axis.X)
+    y1 = start.get_value(Axis.Y); y2 = end.get_value(Axis.Y)
+    z1 = start.get_value(Axis.Z)
+    newstart =world(x1,y1,z1).add(pos(0,y2-y1+1,0))
+    blocks.place(TOP_SNOW,positions.ground_position(newstart))
+
+
 # add mark
 def push_mark(marks=[pos(0,0,0)],curpos:Position=player.position()):
-    #curpos = player.position()
     marks.append(curpos)
     add_build_line(curpos)
     blocks.place(mark_blk, curpos)
@@ -155,17 +167,13 @@ def push_mark(marks=[pos(0,0,0)],curpos:Position=player.position()):
 def pop_mark(marks=[pos(0, 0, 0)]):
     size = len(marks)
     if size == 0: return
-    #curpos = pos(0, 0, 0)
     prepos = None #pos(0, 0, 0)
     curpos = marks[size - 1]
     del_build_line(curpos)
+    blocks.place(AIR, curpos)
     if size >= 2:
         prepos = marks[size - 2]
-        blocks.fill(AIR, marks[size - 1], marks[size - 2])
         add_build_line(prepos)
-        blocks.place(mark_blk, marks[size - 2])
-    elif size == 1:
-        blocks.place(AIR, marks[size - 1])
     marks.pop()
 
 # build wall from a serial of adjacent marks
@@ -186,6 +194,13 @@ def clear_marks(marks=[pos(0, 0, 0)]):
     while (len(marks)):
         marks.pop()
 
+def copy_marks(dst=[pos(0, 0, 0)],src=[pos(0, 0, 0)]):
+    clear_marks(dst)
+    for x in src:  
+        dst.append(x)
+#get mark num
+def marks_num(marks=[pos(0, 0, 0)]):
+    return len(marks)
 # clone from the cube space enclosed by all marks
 def clone_from_marks(marks=[],into:Position=player.position(),align:bool=True):
     if len(marks) < 2: return None
@@ -196,20 +211,29 @@ def clone_from_marks(marks=[],into:Position=player.position(),align:bool=True):
     y1 = start.get_value(Axis.Y); y2 = end.get_value(Axis.Y)
     z1 = start.get_value(Axis.Z); z2 = end.get_value(Axis.Z)
     x = into.get_value(Axis.X); y = into.get_value(Axis.Y); z = into.get_value(Axis.Z)
-    _into = into
     if align:
         xin=False; zin=False
-        if x >= x1 and x <= x2:
-            xin = True
-        if z >= z1 and z <= z2:
-            zin = True
-        if xin and zin:
-            _into = world(x1,y,z1)
+        if x >= x1 and x <= x2: xin = True
+        if z >= z1 and z <= z2: zin = True
+        if xin and zin: 
+            x =x1; z=z1
         if xin and not zin:
-            _into = world(x1,y,z)
+            dz =0
+            dz =z2-z1
+            _into_z =0
+            _into_z =z+dz
+            if _into_z >= z1 and _into_z <= z2: z-=dz
+            x =x1
         if not xin and zin:
-            _into = world(x,y,z1)
+            dx =0
+            dx =x2-x1
+            _into_x =0 
+            _into_x = x+dx
+            if _into_x >=x1 and _into_x <= x2: x-=dx
+            z=z1
+    _into =world(x,y,z)
     blocks.clone(start, end,_into, CloneMask.REPLACE, CloneMode.NORMAL)
+    copy_marks(marks,[_into,world(x+x2-x1,y+y2-y1,z+z2-z1)])
     return _into.add(pos(0,y2-y1+1,0))
 
 def replace_from_marks(marks=[],newblk:int=GRASS, oldblk:int=GRASS):
@@ -356,6 +380,7 @@ def on_build_wall():
         marks = marksarray[size - 1]
         if len(marks)>=2: 
             build_wall_from_marks(marks, block)
+            place_on_enclosure_top(marks)
             BuildState.buildstate=BuildState.DONE
         release()
 
@@ -373,7 +398,7 @@ def on_build_cube():
     marks = marksarray[size - 1]
     if len(marks)>=2: build_cube_from_marks(marks,block)
     release()
-    #on_reset()
+    on_reset()
 def on_build_cube_handle(high: int = 0):
     on_build_cube()
 player.on_chat("cube", on_build_cube_handle)
@@ -384,7 +409,7 @@ def on_build__hollow_cube():
     marks = marksarray[size - 1]
     if len(marks)>=2: build_hollow_cube_from_marks(marks,block)
     release()
-    #on_reset()
+    on_reset()
 def on_build__hollow_cube_handle(high: int = 0):
     on_build__hollow_cube()
 player.on_chat("hollowcube", on_build__hollow_cube_handle)
@@ -454,10 +479,15 @@ player.on_chat("dellevel", on_del_one_level_handle)
 #process clone from marks cmd
 def on_clone():
     acquire()
-    newpos =clone_from_marks(marksarray[len(marksarray) - 1])
-    if newpos: player.teleport(newpos)
+    marks= marksarray[len(marksarray) - 1]
+    if marks_num(marks):
+        copy_marks(clonemarks,marks)
+    if marks_num(clonemarks):
+        newpos =clone_from_marks(clonemarks)
+        if newpos: player.teleport(newpos)
     player.say("clone")
     release()
+    on_reset()
 
 def on_clone_handle():
     on_clone()
@@ -470,6 +500,15 @@ def on_clear():
     clear_from_marks(marksarray[len(marksarray)-1])
     release()
     on_reset()#remove marks after clear done
+    '''
+    acquire()
+    clear_from_marks(marksarray[len(marksarray)-1])
+    clear_marks(marksarray[len(marksarray)-1])
+    if len(marksarray) >= 2: marksarray.pop()
+    else: mobs.clear_effect(mobs.target(LOCAL_PLAYER))
+    release()
+    '''
+    
 
 def on_clear_handle():
     on_clear()
@@ -485,6 +524,7 @@ def on_replace():
         replace_from_marks(marks,newblk,block)
         block=newblk
     release()
+    on_reset()
 
 def on_replace_handle():
         on_replace()
@@ -555,13 +595,16 @@ class BuildState:
 # on stat,here
 # curlevel=0
 marksarray = [[pos(0, 0, 0), ], ]
+clonemarks = [pos(0,0,0)]
 block = GRASS
 buildmode = 1 
 # I don't know why can't use marksarray[0].pop(), so I wrote such stupid code below
 temp = [pos(0, 0, 0)]
 temp = marksarray[0]
 temp.pop()
+clonemarks.pop()
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_BOOTS, 1)
+mobs.give(mobs.target(ALL_PLAYERS),IRON_BOOTS, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SWORD, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SHOVEL, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_CARROT, 1)
@@ -578,13 +621,17 @@ def on_item_interacted_mark():
     #player.say("marked")
 player.on_item_interacted(GOLDEN_BOOTS, on_item_interacted_mark)
 
-
-def on_item_interacted_undo():
+def on_item_interacted_unmark2():
     if not check_build_mode(): return
-    on_unmark()
-    #player.run_chat_command("unmark")
-    #player.say("undo last mark")
-player.on_item_interacted(GOLDEN_SHOVEL, on_item_interacted_undo)
+    on_unmark()    
+
+player.on_item_interacted(IRON_BOOTS, on_item_interacted_unmark2)
+
+def on_item_interacted_clear():
+    if not check_build_mode(): return
+    on_clear()
+    
+player.on_item_interacted(GOLDEN_SHOVEL, on_item_interacted_clear)
 
 def on_item_interacted_wall():
     if not check_build_mode(): return
