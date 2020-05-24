@@ -14,15 +14,15 @@ Description: bug fix, clear marks after clear/cube/hollowcube
 def help_ui():
     player.say("---right-click the block below to build---")
     player.say("GOLDEN BOOTS:   add a mark")
-    player.say("GOLDEN SHOVEL:  remove last mark or del one level")
+    player.say("IRON BOOTS:  remove last mark or del one level")
     player.say("GOLDEN SWORD:   build wall or add one level")
     player.say("GOLDEN LEGGINGS: reset all marks")
     player.say("GOLDEN CARROT:  choose the block under the player's feet")
     player.say("GOLDEN APPLE:   replace the old block to the new one under the player's feet")
     player.say("GOLDEN CHESTPLATE: clone to the place where the player is standing")
-
+    player.say("GOLDEN SHOVEL: clear the cubic space enclosed by all marks")
 def on_help():
-    cmd_all=["mark","umark","reset","wall","addlevel","dellevel","clone","clear","setblock","blkmap","dbg","cube","hollowcube","plant","demo"]
+    cmd_all=["mark","umark","reset","wall","addlevel","dellevel","clone","clear","setblock","setalign","blkmap","dbg","cube","hollowcube","plant","demo"]
     cmd_detail=[
         ["mark","mark the position where the player is standing"],
         ["umark","remove the last mark"],
@@ -34,6 +34,7 @@ def on_help():
         ["clear","clear the cube space enclosed by all marks"],
         ["replace","replace the blocks enclosed by all marks to new blocks"],        
         ["setblock","setblock [id]: choose block [id] as building material"],
+        ["setalign","setalign [0|1]: when setalign 1, the target position to clone into will align automatically"],
         ["blkmap","show a block map"],
         ["dbg","show all marks of different level"],
         ["cube","build solid cube from marks"],
@@ -68,7 +69,6 @@ the functions in section one can NOT call the functions in section two and secti
 **NOTE: microsoft minecraft python doesn't support python class well till now, so we have to use functions
         and minecraft python only support static python syntax, not all python2.x/python3.x syntax can be used
 
-detect_block_on_foot(marks)         :get the id of the block under the foot of the player
 detect_block_at_pos(marks,pos)      :get the id of the block at the position of pos
 add_build_line(marks,pos)           :build a auxiliary line at the position of pos
 del_build_line(marks,pos)           :del the auxiliary line at the position of pos
@@ -85,14 +85,6 @@ build_cube_from_marks(marks)        :build a solid cube according to the previou
 build_hollow_cube_from_marks(marks) :like build_cube_from_marks() do, but a hollow cube
 plant_trees_from_marks(marks,tree,interval):plant [trees] in the projective region of the marks on the ground, every [interval] distance
 '''
-def detect_block_on_foot():
-    agent.teleport_to_player()
-    what=agent.inspect(AgentInspection.BLOCK, DOWN)
-    for i in range(1,16):
-        detail=65536*i+what
-        if blocks.test_for_block(detail,pos(0,-1,0)):
-            return detail
-    return what
 
 def detect_block_at_pos(position:Position):
     agent.teleport(position.add(pos(0,1,0)),WEST)
@@ -102,10 +94,7 @@ def detect_block_at_pos(position:Position):
         if blocks.test_for_block(detail,pos(0,-1,0)):
             return detail
     return what
-# build_line: some auxiliary lines which help to locate
-#line_blk=REDSTONE_TORCH
-mark_blk=TOP_SNOW
-#linesize=5
+
 def add_build_line(curpos=pos(0, 0, 0),line_blk=REDSTONE_TORCH, linesize=5):
     if blocks.test_for_block(AIR, curpos.add(pos(0, -1, 0))): return
     blocks.replace(line_blk, AIR, curpos.add(pos(-linesize, 0, 0)), curpos.add(pos(linesize, 0, 0)))
@@ -120,30 +109,19 @@ def del_build_line(curpos=pos(0, 0, 0),line_blk=REDSTONE_TORCH,linesize=5):
 def get_enclosure_from_marks(marks):
     mark = pos(0, 0, 0)
     mark = marks[0]
-    x1 = mark.get_value(Axis.X);
-    y1 = mark.get_value(Axis.Y);
-    z1 = mark.get_value(Axis.Z)
-    x2 = x1;
-    y2 = y1;
-    z2 = z1
+    x1 = mark.get_value(Axis.X); y1 = mark.get_value(Axis.Y); z1 = mark.get_value(Axis.Z)
+    x2 = x1; y2 = y1; z2 = z1
     for x in marks:
         mark = x
-        if mark.get_value(Axis.X) < x1:
-            x1 = mark.get_value(Axis.X)
-        if mark.get_value(Axis.X) > x2:
-            x2 = mark.get_value(Axis.X)
-
-        if mark.get_value(Axis.Y) < y1:
-            y1 = mark.get_value(Axis.Y)
-        if mark.get_value(Axis.Y) > y2:
-            y2 = mark.get_value(Axis.Y)
-
-        if mark.get_value(Axis.Z) < z1:
-            z1 = mark.get_value(Axis.Z)
-        if mark.get_value(Axis.Z) > z2:
-            z2 = mark.get_value(Axis.Z)
+        if mark.get_value(Axis.X) < x1: x1 = mark.get_value(Axis.X)
+        if mark.get_value(Axis.X) > x2: x2 = mark.get_value(Axis.X)
+        if mark.get_value(Axis.Y) < y1: y1 = mark.get_value(Axis.Y)
+        if mark.get_value(Axis.Y) > y2: y2 = mark.get_value(Axis.Y)
+        if mark.get_value(Axis.Z) < z1: z1 = mark.get_value(Axis.Z)
+        if mark.get_value(Axis.Z) > z2: z2 = mark.get_value(Axis.Z)
     return [world(x1, y1, z1), world(x2, y2, z2)]
 
+#place a flag on the top of the cubic space enclosed by the marks, which is useful when clone to a new place
 def place_on_enclosure_top(marks=[pos(0,0,0)]):
     closure = get_enclosure_from_marks(marks)
     start =pos(0,0,0)
@@ -158,9 +136,9 @@ def place_on_enclosure_top(marks=[pos(0,0,0)]):
 
 
 # add mark
-def push_mark(marks=[pos(0,0,0)],curpos:Position=player.position()):
+def push_mark(marks=[pos(0,0,0)],curpos:Position=player.position(),mark_blk=TOP_SNOW):
     marks.append(curpos)
-    add_build_line(curpos)
+    if setting.buildline: add_build_line(curpos)
     blocks.place(mark_blk, curpos)
 
 # undo last added mark
@@ -169,11 +147,11 @@ def pop_mark(marks=[pos(0, 0, 0)]):
     if size == 0: return
     prepos = None #pos(0, 0, 0)
     curpos = marks[size - 1]
-    del_build_line(curpos)
+    if setting.buildline: del_build_line(curpos)
     blocks.place(AIR, curpos)
     if size >= 2:
         prepos = marks[size - 2]
-        add_build_line(prepos)
+        if setting.buildline: add_build_line(prepos)
     marks.pop()
 
 # build wall from a serial of adjacent marks
@@ -186,7 +164,7 @@ def build_wall_from_marks(marks=[pos(0, 0, 0)], block=GRASS):
         blocks.fill(block, start, end)
         start = marks[i]
     for x in marks:
-        del_build_line(x)
+        if setting.buildline:del_build_line(x)
     return True
 
 # clear all marks of all levels
@@ -218,14 +196,14 @@ def clone_from_marks(marks=[],into:Position=player.position(),align:bool=True):
         if xin and zin: 
             x =x1; z=z1
         if xin and not zin:
-            dz =0
+            #dz =0
             dz =z2-z1
-            _into_z =0
+            _into_z =0 # I don't know why _into_z must asigned to 0 first, or else there will be a compile error, a stupid python compiler
             _into_z =z+dz
             if _into_z >= z1 and _into_z <= z2: z-=dz
             x =x1
         if not xin and zin:
-            dx =0
+            #dx =0
             dx =x2-x1
             _into_x =0 
             _into_x = x+dx
@@ -345,7 +323,7 @@ def on_mark():
         release()
         on_reset()    
         acquire()     
-    push_mark(marksarray[len(marksarray) - 1],player.position())
+    push_mark(buildmarks,player.position())
     #2020-05-18 Magi
     mobs.apply_effect(Effect.HASTE, mobs.target(LOCAL_PLAYER),600)
     release()
@@ -357,7 +335,7 @@ player.on_chat("mark", on_mark_handle)
 def on_unmark():
     acquire()
     if BuildState.buildstate==BuildState.READY:
-        marks = marksarray[len(marksarray) - 1]
+        marks = buildmarks
         pop_mark(marks)
         if(len(marks)==0): 
             #2020-05-18,Magi
@@ -376,14 +354,12 @@ player.on_chat("unmark", on_unmark_handle)
 def on_build_wall():
     acquire()
     if BuildState.buildstate==BuildState.READY:
-        size = len(marksarray)
-        marks = marksarray[size - 1]
+        marks = buildmarks
         if len(marks)>=2: 
-            build_wall_from_marks(marks, block)
+            build_wall_from_marks(marks, setting.buildblock)
             place_on_enclosure_top(marks)
             BuildState.buildstate=BuildState.DONE
         release()
-
     elif BuildState.buildstate==BuildState.DONE:
         release()#because acquire will be called also in on_add_one_level,so release here
         on_add_one_level()
@@ -394,9 +370,8 @@ player.on_chat("wall", on_build_wall_handle)
 
 def on_build_cube():
     acquire()
-    size = len(marksarray)
-    marks = marksarray[size - 1]
-    if len(marks)>=2: build_cube_from_marks(marks,block)
+    marks = buildmarks
+    if len(marks)>=2: build_cube_from_marks(marks,setting.buildblock)
     release()
     on_reset()
 def on_build_cube_handle(high: int = 0):
@@ -405,9 +380,8 @@ player.on_chat("cube", on_build_cube_handle)
 
 def on_build__hollow_cube():
     acquire()
-    size = len(marksarray)
-    marks = marksarray[size - 1]
-    if len(marks)>=2: build_hollow_cube_from_marks(marks,block)
+    marks = buildmarks
+    if len(marks)>=2: build_hollow_cube_from_marks(marks,setting.buildblock)
     release()
     on_reset()
 def on_build__hollow_cube_handle(high: int = 0):
@@ -416,16 +390,12 @@ player.on_chat("hollowcube", on_build__hollow_cube_handle)
 
 #
 def on_reset():
-    global marksarray
     acquire()
     if BuildState.buildstate==BuildState.READY:
-        marks=marksarray[len(marksarray)-1]
-        for p in marks: del_build_line(p)
-    for x in marksarray:
-        clear_marks(x)
-    while(len(marksarray)>1): marksarray.pop()
+        if setting.buildline:
+            for p in buildmarks: del_build_line(p)
+    clear_marks(buildmarks)
     BuildState.buildstate=BuildState.READY
-    #2020-05-18
     mobs.clear_effect(mobs.target(LOCAL_PLAYER))
     release()
 def on_reset_handle():
@@ -433,14 +403,16 @@ def on_reset_handle():
 player.on_chat("reset", on_reset_handle)
 #
 def on_show_block():
-    player.say("block="+str(block))
+    player.say("building block:"+str(setting.buildblock))
+    player.say("replace  block:"+str(setting.replaceblock))
 player.on_chat("showblock", on_show_block)
 
 # process add one level cmd
 def on_add_one_level():
+    global buildmarks
     acquire()
-    marks = marksarray[len(marksarray) - 1]
-    if len(marks)==0: 
+    marks = buildmarks
+    if len(marks) < 2: 
         release()
         return
     floor = pos(0, 0, 0)
@@ -453,8 +425,9 @@ def on_add_one_level():
     newmarks.pop()
     for x in marks:
         newmarks.append(x.add(pos(0, dy, 0)))
-    marksarray.append(newmarks)
-    build_wall_from_marks(newmarks,block)
+    clear_marks(buildmarks)
+    buildmarks =newmarks
+    build_wall_from_marks(buildmarks,setting.buildblock)
     release()
 def on_add_one_level_handle():
     on_add_one_level()
@@ -462,14 +435,25 @@ player.on_chat("addlevel", on_add_one_level_handle)
 
 #process del one level cmd
 def on_del_one_level():
+    global buildmarks
     acquire()
-    marks= marksarray[len(marksarray) - 1]
-    build_wall_from_marks(marks,AIR)
-    clear_marks(marks)
-    if len(marksarray) >1:
-        marksarray.pop()
-    else:
-        mobs.clear_effect(mobs.target(LOCAL_PLAYER))
+    marks = buildmarks
+    if len(marks) < 2: 
+        release()
+        return
+    floor = pos(0, 0, 0)
+    ceil = pos(0, 0, 0)
+    closure = get_enclosure_from_marks(marks)
+    floor = closure[0]
+    ceil = closure[1]
+    dy = ceil.get_value(Axis.Y) - floor.get_value(Axis.Y) + 1
+    newmarks = [pos(0, 0, 0)]
+    newmarks.pop()
+    for x in marks:
+        newmarks.append(x.add(pos(0, -dy, 0)))
+    build_wall_from_marks(buildmarks,AIR)
+    clear_marks(buildmarks)
+    buildmarks =newmarks
     release()
     
 def on_del_one_level_handle():
@@ -479,36 +463,37 @@ player.on_chat("dellevel", on_del_one_level_handle)
 #process clone from marks cmd
 def on_clone():
     acquire()
-    marks= marksarray[len(marksarray) - 1]
+    marks= buildmarks
     if marks_num(marks):
         copy_marks(clonemarks,marks)
+        release()
+        on_reset()
+        acquire()
     if marks_num(clonemarks):
-        newpos =clone_from_marks(clonemarks)
+        newpos =clone_from_marks(clonemarks,player.position(),setting.clonealign)
         if newpos: player.teleport(newpos)
     player.say("clone")
     release()
-    on_reset()
 
 def on_clone_handle():
     on_clone()
 player.on_chat("clone", on_clone_handle)
 
+def on_unclone():
+    clear_from_marks(clonemarks)
+    player.say("unclone")
+
+def on_unclone_handle():
+    on_unclone()
+player.on_chat("unclone", on_unclone_handle)
+
 
 #process clone from marks cmd
 def on_clear():
     acquire()
-    clear_from_marks(marksarray[len(marksarray)-1])
+    clear_from_marks(buildmarks)
     release()
-    on_reset()#remove marks after clear done
-    '''
-    acquire()
-    clear_from_marks(marksarray[len(marksarray)-1])
-    clear_marks(marksarray[len(marksarray)-1])
-    if len(marksarray) >= 2: marksarray.pop()
-    else: mobs.clear_effect(mobs.target(LOCAL_PLAYER))
-    release()
-    '''
-    
+    on_reset()#remove marks after clear done    
 
 def on_clear_handle():
     on_clear()
@@ -516,13 +501,11 @@ player.on_chat("clear", on_clear_handle)
 
 
 def on_replace():
-    global block
     acquire()
-    newblk =detect_block_on_foot()
-    marks = marksarray[len(marksarray) - 1]
+    marks = buildmarks
     if len(marks) >=2: 
-        replace_from_marks(marks,newblk,block)
-        block=newblk
+        replace_from_marks(marks,setting.replaceblock, setting.buildblock)
+        #block=newblk, removed 2020-05024
     release()
     on_reset()
 
@@ -536,7 +519,7 @@ player.on_chat("replace", on_replace_handle)
 #plant_from_marks
 def on_plant(tree,interval):
     acquire()
-    plant_trees_from_marks(marksarray[len(marksarray) - 1],tree,interval)
+    plant_trees_from_marks(buildmarks,tree,interval)
     release()
     on_reset()
     pass
@@ -548,34 +531,47 @@ player.on_chat("plant", on_plant_handle)
 
 # config the type of block to build
 def on_set_blk(blk:int):
-    global block
-    #strblk=""
-    block=blk
-    player.say("set block to " + str(blk))
+    setting.buildblock=blk
+    player.say("set building block to " + str(blk))
 player.on_chat("setblock", on_set_blk)
+
+
+def on_set_replace_blk(blk:int):
+    setting.replaceblock=blk
+    player.say("set replace block to " + str(blk))
+player.on_chat("setreplaceblock", on_set_replace_blk)
 
 #config build mode on/off
 def on_set_build_mode(mode: int):
-    global buildmode
-    buildmode = mode
-    if buildmode == 0:
-        player.say("build mode off")
+    if mode==1: setting.buildmode = True
+    else: setting.buildmode =False
+    if setting.buildmode:
+        player.say("build mode on")
     else:
-        player.say("build mode on ")
-player.on_chat("buildmode", on_set_build_mode)
+        player.say("build mode off ")
+player.on_chat("setbuildmode", on_set_build_mode)
+#config clone alignment 
+def on_set_clone_alignment(align: int):
+    if align==1: 
+        setting.clonealign = True
+    else: 
+        setting.clonealign =False
+    if setting.clonealign:
+        player.say("clone alignment on")
+    else:
+        player.say("clone alignment off ")
+player.on_chat("setalign", on_set_clone_alignment)
 
 # check build mode
 def check_build_mode():
-    global buildmode
-    return True if buildmode == 1 else False
+    return True if setting.buildmode else False
     
 #show marks,print each level of marks
 def on_debug():
-    for marks in marksarray:
-        strr=""
-        for mark in marks:
-            strr+="("+str(mark)+")"
-        player.say(strr)    
+    strr=""
+    for x in buildmarks: strr+="("+str(x)+")"
+    player.say(strr)
+    pass   
 player.on_chat("dbg", on_debug)
 
 def on_show_block_map():
@@ -585,23 +581,23 @@ def on_show_block_map():
             blocks.place(i * 10 + j, start.add(pos(2 * i + 2 * i // 10, -1, 2 * j)))
 player.on_chat("blkmap", on_show_block_map)
 
-
-
 class BuildState:
     buildstate=0
     READY=0
     DONE=1
 
+class setting:
+    buildblock =GRASS
+    replaceblock =GRASS
+    buildmode =True
+    buildline =True
+    clonealign =True
+
 # on stat,here
 # curlevel=0
-marksarray = [[pos(0, 0, 0), ], ]
+buildmarks = [pos(0, 0, 0)]
 clonemarks = [pos(0,0,0)]
-block = GRASS
-buildmode = 1 
-# I don't know why can't use marksarray[0].pop(), so I wrote such stupid code below
-temp = [pos(0, 0, 0)]
-temp = marksarray[0]
-temp.pop()
+buildmarks.pop()
 clonemarks.pop()
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_BOOTS, 1)
 mobs.give(mobs.target(ALL_PLAYERS),IRON_BOOTS, 1)
@@ -656,11 +652,15 @@ def on_item_interacted_clone():
     player.say("clone")
 player.on_item_interacted(GOLDEN_CHESTPLATE, on_item_interacted_clone)
 
-
 def on_item_interacted_pick_block():
-    global block
-    block =detect_block_on_foot()
-    player.say("set block to "+str(block))
+    curpos =player.position()
+    footpos =curpos.add(pos(0,-1,0))
+    footposdown =footpos.add(pos(0,-1,0))
+    setting.replaceblock =detect_block_at_pos(footposdown)
+    setting.buildblock =detect_block_at_pos(footpos)
+    player.say("set building block: "+str(setting.buildblock))
+    player.say("set replace block:  "+str(setting.replaceblock))
+
 player.on_item_interacted(GOLDEN_CARROT, on_item_interacted_pick_block)
 
 
