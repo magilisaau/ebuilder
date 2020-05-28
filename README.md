@@ -1,4 +1,4 @@
-​									Minecraft Build Assistant Document
+									Minecraft Build Assistant Document
 
 ​                                                                                      magilisaau@gmail.com, 2020.5.24
 
@@ -14,7 +14,7 @@ Minecraft is one of the most popular game among kids around the world, it can ru
 
 before start, let's look at several concepts in the code
 
-**block:**  blocks are the smallest unit of building, every type of block is represented by a number, for example, 0 represents for air, 1: stone, 2:  grass block, 9: water, 175: sun flower
+**block:**  blocks are the smallest unit of building, every type of block is represented by a number, for example, 0 represents for air, 1: stone, 2:  grass block, 9: water,  for detail please refer to  https://github.com/magilisaau/minecraft_buildAssistant/blob/master/blockid.py
 
 **mark**: mark is a position on the map in game which you have marked for later use. Thinking about building a wall. First step, mark a place. Then, mark another place. At last, build a wall between two marks.
 
