@@ -4,10 +4,12 @@ Contact: magilisaau@gmail.com
 CreateTime: 2020/04/20
 ModifyTime: 2020/6/28
 Description: the project is to help kids build house more efficiently and easily in the game minecraft
-
-This project include TWO important files, and each have two sections
----custom.ts: written in javascript, an extension which can be installed into Code Builder, it can be used seperately
----main.py:   written in python, implement a command list interface(CLI) a the graphical user interface(UI)
+'''
+'''
+    This project include TWO important files, and each have two sections
+    ---custom.ts: written by javascript, this an extension which can be installed into Code Builder
+                  this can be used seperately
+    ---main.py: written by python, implement a command list interface(CLI) and the graphical user interface(UI)
     
 '''
 class setting:
@@ -88,7 +90,7 @@ player.on_chat("decrease", on_decrease_wall_handle)
 
 def on_ruler():
     ebuilder.acquire()
-    ebuilder.show_ruler()
+    ebuilder.show_ruler(pos(0,0,0))
     ebuilder.release()
 player.on_chat("ruler", on_ruler)
 

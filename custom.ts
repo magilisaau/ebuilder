@@ -219,7 +219,7 @@ namespace ebuilder{
 	    build_wall_from_marks(marks, AIR)
 	    copy_marks(marks, newmarks)
 	}
-	
+/*
 	function build_ruler_from_marks(marks: Position[]) {
         let size =marks.length
 	    if (size < 2) {
@@ -228,6 +228,11 @@ namespace ebuilder{
 	    }
         let start =marks[size-2]
         let end =marks[size-1]
+        if (size >2){
+            let closure = get_enclosure_from_marks(marks)
+            start =closure[0]
+            end =closure[1]
+        }
 	    let x1 = start.getValue(Axis.X)
 	    let x2 = end.getValue(Axis.X)
 	    let y1 = start.getValue(Axis.Y)
@@ -254,6 +259,7 @@ namespace ebuilder{
             }              
         }
 	}
+*/
 	function hide_ruler_from_marks(marks: Position[]) {
 	    if (marks.length < 2) {
 	        return
@@ -300,38 +306,26 @@ namespace ebuilder{
 	    let dx: number;
 	    let _into_x: number;
 	    if (marks.length < 2) {
-            //print("error,must mark first")
 	        return undefined
 	    }
-	    
 	    let closure = get_enclosure_from_marks(marks)
-	    let start = closure[0]
-	    let end = closure[1]
-	    let x1 = start.getValue(Axis.X)
-	    let x2 = end.getValue(Axis.X)
-	    let y1 = start.getValue(Axis.Y)
-	    let y2 = end.getValue(Axis.Y)
-	    let z1 = start.getValue(Axis.Z)
-	    let z2 = end.getValue(Axis.Z)
-	    let x = into.getValue(Axis.X)
-	    let y = into.getValue(Axis.Y)
-	    let z = into.getValue(Axis.Z)
+	    let start = closure[0]; let end = closure[1]
+	    let x1 = start.getValue(Axis.X); let x2 = end.getValue(Axis.X); let x = into.getValue(Axis.X);
+	    let y1 = start.getValue(Axis.Y); let y2 = end.getValue(Axis.Y); let y = into.getValue(Axis.Y);
+	    let z1 = start.getValue(Axis.Z); let z2 = end.getValue(Axis.Z); let z = into.getValue(Axis.Z)
 	    if (align) {
 	        xin = false
 	        zin = false
 	        if (x >= x1 && x <= x2) {
 	            xin = true
 	        }
-	        
 	        if (z >= z1 && z <= z2) {
 	            zin = true
 	        }
-	        
 	        if (xin && zin) {
 	            x = x1
 	            z = z1
 	        }
-
 	        if (xin && !zin) {
 	            dz = z2 - z1        
 	            _into_z = z + dz
@@ -340,7 +334,6 @@ namespace ebuilder{
 	            }
 	            x = x1
 	        }
-	        
 	        if (!xin && zin) {
 	            dx = x2 - x1
 	            _into_x = x + dx
@@ -349,7 +342,6 @@ namespace ebuilder{
 	            }
 	            z = z1
 	        }
-	        
 	    }
 	    let _into = world(x, y, z)
 	    blocks.clone(start, end, _into, CloneMask.Replace, CloneMode.Normal)
@@ -439,8 +431,8 @@ namespace ebuilder{
 	mark(pos,show)          :mark at the position, show the mark if show=True,else hide it
 	unmark()                :del the last mark
 	show_marks()            :show all the marks on screen
-	show_ruler()            :show rulers in the area enclosed by all marks
-	hide_ruler()            :hide rulers in the area enclosed by all marks    
+	show_ruler(pos)         :show rulers in the position
+	hide_ruler()            :hide all rulers 
     build_wall(block)       :build walls according to all marks, one wall each two adjacent marks
 	build_line(block)       :build lines according to all marks, one line each two adjacent marks
     build_cube(block)       :build a solid cube according to all marks 
@@ -520,20 +512,29 @@ namespace ebuilder{
         }
 	}
 
+    let ruler_length =2;
+    let ruler_unit =5;
+	function hide_one_ruler(curpos: Position) {
+        blocks.replace(AIR, REDSTONE_TORCH, curpos.add(pos(-ruler_length*ruler_unit, 0, 0)), curpos.add(pos(ruler_length*ruler_unit, 0, 0)))
+	    blocks.replace(AIR, REDSTONE_TORCH, curpos.add(pos(0, 0, -ruler_length*ruler_unit)), curpos.add(pos(0, 0, ruler_length*ruler_unit)))
+	}
 	/**
-     * show ruler from marks 
-     * @param curpos the position to show ruler
+     * show ruler
      */
-    //% block="show ruler "
+    //% block="show ruler at %curpos=minecraftCreatePosition"
     //% weight=93
     //% hidden
-	export function show_ruler() {
-        if (marks_num(buildmarks)>=2){
-            copy_marks(rulers,buildmarks)
-            reset_marks()
-            build_ruler_from_marks(rulers)
+	export function show_ruler(curpos: Position=pos(0,0,0)) {
+        let wpos =curpos.toWorld();
+        rulers.push(wpos)
+        for(let p=0; p< ruler_length; p++){
+            blocks.replace(REDSTONE_TORCH, AIR, wpos.add(pos(p*ruler_unit+1,0,0)), wpos.add(pos((p+1)*ruler_unit-1,0,0)))
+            blocks.replace(REDSTONE_TORCH, AIR, wpos.add(pos(-p*ruler_unit-1,0,0)),wpos.add(pos(-(p+1)*ruler_unit+1,0,0)))
+            blocks.replace(REDSTONE_TORCH, AIR, wpos.add(pos(0,0,p*ruler_unit+1)), wpos.add(pos(0,0,(p+1)*ruler_unit-1)))
+            blocks.replace(REDSTONE_TORCH, AIR, wpos.add(pos(0,0,-p*ruler_unit-1)),wpos.add(pos(0,0,-(p+1)*ruler_unit+1)))
         }
 	}
+
 
    	/**
      * hide ruler from marks
@@ -542,15 +543,15 @@ namespace ebuilder{
     //% weight=92
     //% hidden
 	export function hide_ruler() {
-        if(marks_num(buildmarks)==0){
-            hide_ruler_from_marks(rulers)
-            clear_marks(rulers)
-            return
-        }
-        if(marks_num(buildmarks)>=2){
+        if(buildmarks.length >= 2){
             hide_ruler_from_marks(buildmarks)
             reset_marks()
+            return
         }
+        for (let p of rulers) {
+            hide_one_ruler(p)
+        }
+        clear_marks(rulers)
 	}
 
 	/**
