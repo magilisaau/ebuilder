@@ -56,7 +56,7 @@ namespace ebuilder{
 	    let what = agent.inspect(AgentInspection.Block, DOWN)
 	    for (let i = 1; i < 16; i++) {
 	        detail = 65536 * i + what
-	        if (blocks.testForBlock(detail, pos(0, -1, 0))) {
+	        if (blocks.testForBlock(detail, position.add(pos(0, -1, 0)))) {
 	            return detail
 	        }
 	        

@@ -246,22 +246,51 @@ def on_item_interacted_glistering_melon():
     ebuilder.release()  
 player.on_item_interacted(GLISTERING_MELON, on_item_interacted_glistering_melon)
 
+def detect_and_replace(curpos:Position,block:number):
+    x1 =0;x2 =0;y1 =0;y2 =0;z1 =0;z2 =0
+    #player.say("block=")
+    #player.say(block)
+    while blocks.test_for_block(block, curpos.add(pos(x1,0,0))): x1 -=1
+    while blocks.test_for_block(block, curpos.add(pos(x2,0,0))): x2 +=1
+    while blocks.test_for_block(block, curpos.add(pos(0,y1,0))): y1 -=1
+    while blocks.test_for_block(block, curpos.add(pos(0,y2,0))): y2 +=1
+    while blocks.test_for_block(block, curpos.add(pos(0,0,z1))): z1 -=1
+    while blocks.test_for_block(block, curpos.add(pos(0,0,z2))): z2 +=1        
+    x1+=1; x2-=1; y1+=1; y2-=1; z1+=1; z2-=1;
+    cnt =(y2-y1+1)//10
+    reminder = (y2-y1+1)%10
+    for i in range(cnt):
+        start =curpos.add(pos(x1,y1+10*i,z1))
+        end =curpos.add(pos(x2,y1+10*i+10,z2))
+        blocks.replace(setting.buildblock, block,start,end)
+    if reminder:
+        start =curpos.add(pos(x1,y1+cnt*10,z1))
+        end =curpos.add(pos(x2,y2,z2))
+        player.say(start)
+        player.say(end)
+        blocks.replace(setting.buildblock, block,start,end)
+
+def do_replace(checkpos, checkTorch, newTorch, relativePos):
+    for x in checkpos:
+        x1 =x.to_world()
+        if blocks.test_for_block(checkTorch,x):
+            blocks.place(newTorch,x)
+            x2 =x1.add(relativePos)
+            replacedblock =ebuilder.detect_block_at_pos(x2)
+            ebuilder.acquire()
+            if ebuilder.mark_num()==0:
+                detect_and_replace(x2,replacedblock)
+            else:
+                ebuilder.replace(replacedblock,setting.buildblock)
+            ebuilder.release()
+            break
 def on_block_placed_west():
     checkpos =[ pos(0,1,0),
                 pos(-1,1,0),pos(-1,0,0),
                 pos(-2,1,0),pos(-2,0,0),
                 pos(-3,1,0),pos(-3,0,0),
             ]
-    for x in checkpos:
-        if blocks.test_for_block(0x10032,x):
-            blocks.place(0x1004c,x)
-            x1 =x.to_world()
-            x2 =x1.add(pos(-1,0,0))
-            replacedblock =ebuilder.detect_block_at_pos(x2)
-            ebuilder.acquire()
-            ebuilder.replace(replacedblock,setting.buildblock)
-            ebuilder.release()
-            break
+    do_replace(checkpos,0x10032,0x1004c,pos(-1,0,0))
 blocks.on_block_placed(0x10032, on_block_placed_west)
 
 def on_block_placed_east():
@@ -270,16 +299,7 @@ def on_block_placed_east():
                 pos(2,1,0),pos(2,0,0),
                 pos(3,1,0),pos(3,0,0),
             ]
-    for x in checkpos:
-        if blocks.test_for_block(0x20032,x):
-            blocks.place(0x2004c,x)
-            x1 =x.to_world()
-            x2 =x1.add(pos(1,0,0))
-            replacedblock =ebuilder.detect_block_at_pos(x2)
-            ebuilder.acquire()
-            ebuilder.replace(replacedblock,setting.buildblock)
-            ebuilder.release()
-            break
+    do_replace(checkpos,0x20032,0x2004c,pos(1,0,0))
 blocks.on_block_placed(0x20032, on_block_placed_east)
 
 def on_block_placed_north():
@@ -288,16 +308,7 @@ def on_block_placed_north():
                 pos(0,1,-2),pos(0,0,-2),
                 pos(0,1,-3),pos(0,0,-3)
                 ]
-    for x in checkpos:
-        if blocks.test_for_block(0x30032,x):
-            blocks.place(0x3004c,x)
-            x1 =x.to_world()
-            x2 =x1.add(pos(0,0,-1))
-            replacedblock =ebuilder.detect_block_at_pos(x2)
-            ebuilder.acquire()
-            ebuilder.replace(replacedblock,setting.buildblock)
-            ebuilder.release()
-            break
+    do_replace(checkpos,0x30032,0x3004c,pos(0,0,-1))
 blocks.on_block_placed(0x30032, on_block_placed_north)
 
 def on_block_placed_south():
@@ -306,16 +317,7 @@ def on_block_placed_south():
                 pos(0,1,2),pos(0,0,2),
                 pos(0,1,3),pos(0,0,3),
                 ]
-    for x in checkpos:
-        if blocks.test_for_block(0x40032,x):
-            blocks.place(0x4004c,x)
-            x1 =x.to_world()
-            x2 =x.add(pos(0,0,1))
-            replacedblock =ebuilder.detect_block_at_pos(x2)
-            ebuilder.acquire()
-            ebuilder.replace(replacedblock,setting.buildblock)
-            ebuilder.release()
-            break
+    do_replace(checkpos,0x40032,0x4004c,pos(0,0,1))
 blocks.on_block_placed(0x40032, on_block_placed_south)
 
 def on_help():
@@ -384,4 +386,3 @@ mobs.give(mobs.target(ALL_PLAYERS),TORCH, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_APPLE, 1)
 mobs.give(mobs.target(ALL_PLAYERS),MELON, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GLISTERING_MELON, 1)
-
