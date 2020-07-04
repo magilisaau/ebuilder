@@ -41,8 +41,11 @@
 
 //% weight=100 color=#0fbc20 icon=""
 namespace ebuilder{
+    let dbgflag=1
     function print(msg:string){
-        player.say(msg)
+        if (dbgflag){
+            player.say(msg)
+        }
     }
     /**
      * get id of the block at the position
@@ -219,47 +222,7 @@ namespace ebuilder{
 	    build_wall_from_marks(marks, AIR)
 	    copy_marks(marks, newmarks)
 	}
-/*
-	function build_ruler_from_marks(marks: Position[]) {
-        let size =marks.length
-	    if (size < 2) {
-            //print("error,must mark first")
-	        return
-	    }
-        let start =marks[size-2]
-        let end =marks[size-1]
-        if (size >2){
-            let closure = get_enclosure_from_marks(marks)
-            start =closure[0]
-            end =closure[1]
-        }
-	    let x1 = start.getValue(Axis.X)
-	    let x2 = end.getValue(Axis.X)
-	    let y1 = start.getValue(Axis.Y)
-	    let z1 = start.getValue(Axis.Z)
-	    let z2 = end.getValue(Axis.Z)
-        if(z2 > z1){
-            for(let z=z1; z<=z2; z+=5){
-                blocks.fill(REDSTONE_TORCH, world(x1,y1,z), world(x2,y1,z))
-            }
-        }
-        else{
-            for(let z=z1; z>=z2; z-=5){
-                blocks.fill(REDSTONE_TORCH, world(x1,y1,z), world(x2,y1,z))
-            }            
-        }
-        if(x2 > x1){
-            for(let x=x1; x<=x2; x+=5){
-                blocks.fill(REDSTONE_TORCH, world(x,y1,z1), world(x,y1,z2))
-            }  
-        }
-        else{
-            for(let x=x1; x>=x2; x-=5){
-                blocks.fill(REDSTONE_TORCH, world(x,y1,z1), world(x,y1,z2))
-            }              
-        }
-	}
-*/
+
 	function hide_ruler_from_marks(marks: Position[]) {
 	    if (marks.length < 2) {
 	        return
@@ -354,11 +317,24 @@ namespace ebuilder{
             //print("error,must mark first")
 	        return false
 	    }
-	    
 	    let closure = get_enclosure_from_marks(marks)
 	    let start = closure[0]
 	    let end = closure[1]
-	    blocks.replace(newblk, oldblk, start, end)
+	    let x1 = start.getValue(Axis.X); let x2 = end.getValue(Axis.X); 
+	    let y1 = start.getValue(Axis.Y); let y2 = end.getValue(Axis.Y); 
+	    let z1 = start.getValue(Axis.Z); let z2 = end.getValue(Axis.Z); 
+        let cnt = Math.idiv(y2 - y1 + 1, 10)
+        let reminder = (y2 - y1 + 1) % 10
+        for (let i = 0; i < cnt; i++) {
+            let start2 = world(x1, y1 + 10 * i, z1)
+            let end2 = world(x2, y1 + 10 * i + 10, z2)
+            blocks.replace(newblk, oldblk, start2, end2)
+        }
+        if (reminder) {
+            let start2 = world(x1, y1 + cnt * 10, z1)
+            let end2 = world(x2, y2, z2)
+            blocks.replace(newblk, oldblk, start2, end2)
+        }        
 	    return true
 	}
 	
@@ -658,6 +634,7 @@ namespace ebuilder{
 	    
 	    if (marks_num(clonemarks) >= 2) {
 	        newpos = clone_from_marks(clonemarks, to, align)
+            //player.teleport(newpos)
 	    }
 	}
 	/**
