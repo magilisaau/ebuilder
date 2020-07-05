@@ -19,6 +19,11 @@
 	Contact: magilisaau@gmail.com
 	ModifyTime: 2020/6/28
 	Description: rewrite ruler
+
+	Author: Magi
+	Contact: magilisaau@gmail.com
+	ModifyTime: 2020/7/05
+	Description: support sticky mark
 */
 /*  ############################### section ONE: lib #################################################
 	section ONE are fundermental lib for process marks
@@ -135,6 +140,7 @@ namespace ebuilder{
 	function pop_mark(marks: Position[]) {
 	    let size = marks.length
 	    if (size == 0) {
+            print("no more mark left")
 	        return undefined
 	    }
 		return marks.pop()
@@ -177,7 +183,7 @@ namespace ebuilder{
 	
 	function increase_wall_from_marks(marks: Position[], block: number = GRASS) {
 	    if (marks.length < 2) {
-            //print("error,must mark first")
+            error("error,add at least two marks first")
 	        return
 	    }
 	    let closure = get_enclosure_from_marks(marks)
@@ -408,47 +414,49 @@ namespace ebuilder{
 	plant(tree,interval)    :plant trees on the ground enclosed by all marks
 */
 	// private data 
-	let buildmarks:Position[] = []
-    let markshowpos:Position[] = []
-	let clonemarks:Position[] = []
-    let increasemarks:Position[]=[]
-    let rulers:Position[]=[]
-    let MARK_SHOW_BLK=TOP_SNOW
-
+    class data{
+        static buildmarks:Position[] = []
+        static markshowpos:Position[] = []
+        static clonemarks:Position[] = []
+        static increasemarks:Position[]=[]
+        static rulers:Position[]=[]
+        static MARK_SHOW_BLK=TOP_SNOW
+    }
+    
 	function show_a_mark(mark:Position,block:number){
         blocks.place(block, mark)
     }
     function hide_a_mark(mark:Position){
-	    if (blocks.testForBlock(MARK_SHOW_BLK, mark)) {
+	    if (blocks.testForBlock(data.MARK_SHOW_BLK, mark)) {
 	        blocks.place(AIR, mark)
             return
 	    }
-	    if (blocks.testForBlock(0x1004c, mark)) {
+	    if (blocks.testForBlock(0x1004c, mark)) {//REDSTONE_TORCH FACE EAST
 	        blocks.place(AIR, mark)
             return
 	    }
-	    if (blocks.testForBlock(0x2004c, mark)) {
+	    if (blocks.testForBlock(0x2004c, mark)) {//REDSTONE_TORCH FACE WEST
 	        blocks.place(AIR, mark)
             return
 	    }
-	    if (blocks.testForBlock(0x3004c, mark)) {
+	    if (blocks.testForBlock(0x3004c, mark)) {//REDSTONE_TORCH FACE SOUTH
 	        blocks.place(AIR, mark)
             return
 	    }
-	    if (blocks.testForBlock(0x4004c, mark)) {
+	    if (blocks.testForBlock(0x4004c, mark)) {//REDSTONE_TORCH FACE NORTH
 	        blocks.place(AIR, mark)
             return
 	    }
-	    if (blocks.testForBlock(0x0004c, mark)) {
+	    if (blocks.testForBlock(0x0004c, mark)) {//REDSTONE_TORCH FACE UP
 	        blocks.place(AIR, mark)
             return
 	    }
 	   
     }
     function hide_marks(){
-        let size =markshowpos.length
+        let size =data.markshowpos.length
         if (size > 0){
-        for (let p of markshowpos) {
+        for (let p of data.markshowpos) {
                 hide_a_mark(p)
             }
 	    }
@@ -462,10 +470,10 @@ namespace ebuilder{
     //% block="place a mark at %position=minecraftCreatePosition and show %show"
     export function mark(position: Position =pos(0,0,0),show: boolean = true) {
         let wpos =position.toWorld()
-	    push_mark(buildmarks, wpos) 
-        markshowpos.push(wpos)
+	    push_mark(data.buildmarks, wpos) 
+        data.markshowpos.push(wpos)
         if(show){
-            show_a_mark(wpos,MARK_SHOW_BLK)
+            show_a_mark(wpos,data.MARK_SHOW_BLK)
         }
 	}  
 
@@ -490,8 +498,8 @@ namespace ebuilder{
             }
         }
         if (findpos!=undefined){ 
-            push_mark(buildmarks,wpos.add(findpos)) 
-            markshowpos.push(wpos)
+            push_mark(data.buildmarks,wpos.add(findpos)) 
+            data.markshowpos.push(wpos)
             if(show){
                 let x = findpos.getValue(Axis.X)
 	            let y = findpos.getValue(Axis.Y)
@@ -515,7 +523,7 @@ namespace ebuilder{
             }
         }
         else{//if
-            error("error,no block nearby")
+            error("sticky mark error,no block nearby")
         }
 	}
 
@@ -526,8 +534,8 @@ namespace ebuilder{
     //% block="remove the last mark"
     //% hidden
 	export function unmark() {
-	    pop_mark(buildmarks)
-        let showpos =pop_mark(markshowpos)
+	    pop_mark(data.buildmarks)
+        let showpos =pop_mark(data.markshowpos)
         hide_a_mark(showpos)
 	}
 
@@ -538,7 +546,7 @@ namespace ebuilder{
     //% block
     //% hidden
 	export function show_marks() {
-	    player.say(marks_info(buildmarks))
+	    player.say(marks_info(data.buildmarks))
 	}
 
 	/**
@@ -550,10 +558,10 @@ namespace ebuilder{
     //% hidden
     //% color="#AA278D"
 	export function build_wall(block: number =GRASS) {
-	    let result = build_wall_from_marks(buildmarks, block)
+	    let result = build_wall_from_marks(data.buildmarks, block)
 	    if (result) {
-	        place_on_enclosure_top(buildmarks)
-            copy_marks(increasemarks,buildmarks)
+	        place_on_enclosure_top(data.buildmarks)
+            copy_marks(data.increasemarks,data.buildmarks)
             reset_marks()
 	    }
 	}
@@ -567,8 +575,8 @@ namespace ebuilder{
     //% hidden
     //% color="#AA278D"
 	export function build_line(block: number =GRASS) {
-        if (marks_num(buildmarks)>=2){
-	        build_line_from_marks(buildmarks, block)
+        if (marks_num(data.buildmarks)>=2){
+	        build_line_from_marks(data.buildmarks, block)
             reset_marks()
         }
 	}
@@ -587,7 +595,7 @@ namespace ebuilder{
     //% hidden
 	export function show_ruler(curpos: Position=pos(0,0,0)) {
         let wpos =curpos.toWorld();
-        rulers.push(wpos)
+        data.rulers.push(wpos)
         for(let p=0; p< ruler_length; p++){
             blocks.replace(REDSTONE_TORCH, AIR, wpos.add(pos(p*ruler_unit+1,0,0)), wpos.add(pos((p+1)*ruler_unit-1,0,0)))
             blocks.replace(REDSTONE_TORCH, AIR, wpos.add(pos(-p*ruler_unit-1,0,0)),wpos.add(pos(-(p+1)*ruler_unit+1,0,0)))
@@ -604,15 +612,15 @@ namespace ebuilder{
     //% weight=92
     //% hidden
 	export function hide_ruler() {
-        if(marks_num(buildmarks) >= 2){
-            hide_ruler_from_marks(buildmarks)
+        if(marks_num(data.buildmarks) >= 2){
+            hide_ruler_from_marks(data.buildmarks)
             reset_marks()
             return
         }
-        for (let p of rulers) {
+        for (let p of data.rulers) {
             hide_one_ruler(p)
         }
-        clear_marks(rulers)
+        clear_marks(data.rulers)
 	}
 
 	/**
@@ -624,7 +632,7 @@ namespace ebuilder{
     //% hidden
     //% color="#AA278D"
 	export function build_cube(block: number =GRASS) {
-	    if(build_cube_from_marks(buildmarks, block)){
+	    if(build_cube_from_marks(data.buildmarks, block)){
             reset_marks()
         }
 	}
@@ -639,7 +647,7 @@ namespace ebuilder{
     //% color="#AA278D"
     
 	export function build_hollow_cube(block: number =GRASS) {
-	    if(build_hollow_cube_from_marks(buildmarks, block)){
+	    if(build_hollow_cube_from_marks(data.buildmarks, block)){
             reset_marks()
         }
 	}
@@ -652,11 +660,11 @@ namespace ebuilder{
     //% weight=100
     //% hidden
 	export function reset_marks() {
-        let size =marks_num(buildmarks)
+        let size =marks_num(data.buildmarks)
         if (size > 0){
             hide_marks()
-	        clear_marks(buildmarks)
-            clear_marks(markshowpos)
+	        clear_marks(data.buildmarks)
+            clear_marks(data.markshowpos)
         }
 	}
 	
@@ -668,7 +676,7 @@ namespace ebuilder{
     //% hidden
 	export function mark_num() {
 
-	    return marks_num(buildmarks)
+	    return marks_num(data.buildmarks)
 	}
 
 
@@ -684,7 +692,7 @@ namespace ebuilder{
     //% color="#AA278D"
 	export function increase_wall(block: number =GRASS,cnt: number=1) {
 	    for (let i = 0; i < cnt; i++) {
-	        increase_wall_from_marks(increasemarks,block)
+	        increase_wall_from_marks(data.increasemarks,block)
 	    }
 	}
 	/**
@@ -698,7 +706,7 @@ namespace ebuilder{
     //% color="#AA278D"
 	export function decrease_wall(cnt: number=1) {
 	    for (let i = 0; i < cnt; i++) {
-	        decrease_wall_from_marks(increasemarks)
+	        decrease_wall_from_marks(data.increasemarks)
 	    }
 	}
 	
@@ -714,13 +722,13 @@ namespace ebuilder{
     //% color="#AA278D"
 	export function clone(to: Position, align: boolean = true) {
 	    let newpos: Position;
-	    if (marks_num(buildmarks) >= 2) {
-	        copy_marks(clonemarks, buildmarks)
+	    if (marks_num(data.buildmarks) >= 2) {
+	        copy_marks(data.clonemarks, data.buildmarks)
             reset_marks()
 	    }
 	    
-	    if (marks_num(clonemarks) >= 2) {
-	        newpos = clone_from_marks(clonemarks, to, align)
+	    if (marks_num(data.clonemarks) >= 2) {
+	        newpos = clone_from_marks(data.clonemarks, to, align)
             //player.teleport(newpos)
 	    }
 	}
@@ -732,7 +740,7 @@ namespace ebuilder{
     //% hidden
     //% color="#AA278D"
 	export function clear() {
-	    if(clear_from_marks(buildmarks)){
+	    if(clear_from_marks(data.buildmarks)){
             reset_marks()
         }
 	}
@@ -747,7 +755,7 @@ namespace ebuilder{
     //% hidden 
     //% color="#AA278D"
 	export function replace(oldblk: number,newblk: number ) {
-	    if(replace_from_marks(buildmarks, newblk, oldblk)){
+	    if(replace_from_marks(data.buildmarks, newblk, oldblk)){
             reset_marks()
         }
 	}
@@ -762,7 +770,7 @@ namespace ebuilder{
     //% hidden
     //% color="#AA278D"
 	export function plant(tree: number, interval: number) {
-	    if(plant_trees_from_marks(buildmarks, tree, interval)){
+	    if(plant_trees_from_marks(data.buildmarks, tree, interval)){
             reset_marks()
         }
 	}

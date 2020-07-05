@@ -63,9 +63,10 @@ player.on_chat("help", on_help)
 
 def help_ui(): 
     player.say("* right-click the block below to use *")
-    player.say("GOLDEN BOOTS: mark")
+    player.say("GOLDEN BOOTS: add a mark")
+    player.say("DIAMOND_BOOTS: add a sticky mark")
     player.say("IRON BOOTS: umark")
-    player.say("GOLDEN SWORD: wall")
+    player.say("GOLDEN SWORD: build wall")
     player.say("GOLDEN CARROT: choose a block")
     player.say("GOLDEN TORCH: replace")
     player.say("GOLDEN APPLE: clone")
@@ -152,7 +153,7 @@ player.on_chat("hideruler", on_remove_ruler)
 def float_to_surface():
     y=0
     while not blocks.test_for_block(AIR, pos(0,y,0)): 
-        y+=2
+        y+=1
     if y>0:
         player.teleport(pos(0,y,0))
 
@@ -203,6 +204,8 @@ player.on_chat("setblock", on_set_blk)
 #show marks
 def on_debug():
     ebuilder.show_marks()
+    player.say("buildblock="+str(setting.buildblock))
+    player.say("clone align="+str(ui_setting.align))
 player.on_chat("dbg", on_debug)
 
 def on_show_block_map():
@@ -215,6 +218,7 @@ player.on_chat("blkmap", on_show_block_map)
 ###########   section TWO, user interface by Magi 2020 #########
 class ui_setting:
     buildmode =True
+    align =True
 # check build mode
 def check_build_mode():
     return True if ui_setting.buildmode else False
@@ -227,6 +231,14 @@ def on_set_build_mode(mode: int):
     else:
         player.say("build mode off ")
 player.on_chat("setbuildmode", on_set_build_mode)
+
+def on_set_align(flag:int):
+    if flag==0:
+        ui_setting.align =False
+    else: 
+        ui_setting.align =True
+    player.say("set clone align to " + str(ui_setting.align))
+player.on_chat("setalign", on_set_align)
 
 def on_item_interacted_mark():
     if not check_build_mode(): return
@@ -262,9 +274,11 @@ player.on_item_interacted(GOLDEN_SHOVEL, on_item_interacted_clear)
 def on_item_interacted_wall():
     if not check_build_mode(): return
     ebuilder.acquire()
-    if ebuilder.mark_num():
-        if ebuilder.mark_num()>=2:
-            ebuilder.build_wall(setting.buildblock)
+    num =ebuilder.mark_num()
+    if num>=2:
+        ebuilder.build_wall(setting.buildblock)
+    elif num>0:
+        player.error_message("error,add at least two marks first")
     else:
         ebuilder.increase_wall(setting.buildblock,1)
     ebuilder.release()
@@ -284,7 +298,7 @@ player.on_item_interacted(GOLDEN_LEGGINGS, on_item_interacted_reset)
 def on_item_interacted_clone():
     if not check_build_mode(): return
     ebuilder.acquire()
-    ebuilder.clone(player.position())
+    ebuilder.clone(player.position(),ui_setting.align)
     float_to_surface()
     ebuilder.release()
     #player.say("clone")
@@ -335,14 +349,17 @@ def do_replace(checkpos, checkTorch, newTorch, relativePos):
             ebuilder.replace(replacedblock,setting.buildblock)
             ebuilder.release()
             break
+
 def on_block_placed_west():
     checkpos =[ pos(0,1,0),
                 pos(-1,1,0),pos(-1,0,0),
                 pos(-2,1,0),pos(-2,0,0),
                 pos(-3,1,0),pos(-3,0,0),
             ]
-    do_replace(checkpos,0x10032,0x1004c,pos(-1,0,0))
-blocks.on_block_placed(0x10032, on_block_placed_west)
+    # 0xA0032 represents for torch, 0xA004c represents for redstone torch
+    # A=0, EAST; A=1, WEST; A=2, SOUTH; A=4, NORTH
+    do_replace(checkpos,0x10032,0x1004c,pos(-1,0,0)) 
+blocks.on_block_placed(0x10032, on_block_placed_west) #TORCH FACING EAST
 
 def on_block_placed_east():
     checkpos =[ pos(0,1,0),
@@ -350,8 +367,8 @@ def on_block_placed_east():
                 pos(2,1,0),pos(2,0,0),
                 pos(3,1,0),pos(3,0,0),
             ]
-    do_replace(checkpos,0x20032,0x2004c,pos(1,0,0))
-blocks.on_block_placed(0x20032, on_block_placed_east)
+    do_replace(checkpos,0x20032,0x2004c,pos(1,0,0)) 
+blocks.on_block_placed(0x20032, on_block_placed_east) #TORCH FACING WEST
 
 def on_block_placed_north():
     checkpos =[ pos(0,1,0),
@@ -359,8 +376,8 @@ def on_block_placed_north():
                 pos(0,1,-2),pos(0,0,-2),
                 pos(0,1,-3),pos(0,0,-3)
                 ]
-    do_replace(checkpos,0x30032,0x3004c,pos(0,0,-1))
-blocks.on_block_placed(0x30032, on_block_placed_north)
+    do_replace(checkpos,0x30032,0x3004c,pos(0,0,-1)) 
+blocks.on_block_placed(0x30032, on_block_placed_north) #TORCH FACING SOUTH
 
 def on_block_placed_south():
     checkpos =[ pos(0,1,0),
@@ -368,8 +385,8 @@ def on_block_placed_south():
                 pos(0,1,2),pos(0,0,2),
                 pos(0,1,3),pos(0,0,3),
                 ]
-    do_replace(checkpos,0x40032,0x4004c,pos(0,0,1))
-blocks.on_block_placed(0x40032, on_block_placed_south)
+    do_replace(checkpos,0x40032,0x4004c,pos(0,0,1)) 
+blocks.on_block_placed(0x40032, on_block_placed_south) #TORCH FACING NORTH
 
 
 # on stat,here
