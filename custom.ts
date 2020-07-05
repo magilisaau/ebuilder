@@ -1,4 +1,4 @@
-  /*
+   /*
 	Author: Magi
 	Contact: magilisaau@gmail.com
 	CreateTime: 2020/04/20
@@ -27,7 +27,6 @@
 	push_mark(marks,pos)                :add a new mark
 	pop_mark(marks)                     :remove the last added mark
 	clear_marks(marks)                  :clear all marks previous added
-	show_marks(marks)                   :show the marks previous added
 	build_wall_from_marks(marks,block)  :build walls according to the previously marks,using block as materials
 	increase_wall_from_marks(marks,block): increase one floor on the wall
 	decrease_wall_from_marks(marks)     :  decrease one floor of the wall
@@ -40,12 +39,16 @@
 */
 
 //% weight=100 color=#0fbc20 icon=""
+
 namespace ebuilder{
     let dbgflag=1
     function print(msg:string){
         if (dbgflag){
             player.say(msg)
         }
+    }
+    function error(msg:string){
+        player.errorMessage(msg)
     }
     /**
      * get id of the block at the position
@@ -118,42 +121,25 @@ namespace ebuilder{
 	    let newstart = world(x1, y1, z1).add(pos(0, y2 - y1 + 1, 0))
 	    let nesstart_ground = positions.groundPosition(newstart)
 	    if (blocks.testForBlock(AIR, nesstart_ground) || blocks.testForBlock(WATER, nesstart_ground)) {
-	        blocks.place(REDSTONE_TORCH, nesstart_ground)
+	        blocks.place(TOP_SNOW, nesstart_ground)
 	    }
 	    
 	}
-	
 	//  add mark
-	function push_mark(marks: Position[], curpos: Position, showmark: Boolean = true) {
-	    marks.push(curpos.toWorld())
-	    if (showmark) {
-    	    blocks.place(TOP_SNOW, curpos.toWorld())
-	    }	    
+	function push_mark(marks: Position[], curpos: Position) {
+        let wpos:Position =curpos.toWorld()
+	    marks.push(wpos)  
 	}
-	
+
 	//  remove last mark
 	function pop_mark(marks: Position[]) {
 	    let size = marks.length
 	    if (size == 0) {
-	        return
+	        return undefined
 	    }
-	    let curpos = marks[size - 1]
-	    if (blocks.testForBlock(TOP_SNOW, curpos)) {
-	        blocks.place(AIR, curpos)
-	    }
-		_py.py_array_pop(marks)
+		return marks.pop()
 	}
-    //hide marks
-    function hide_marks(marks :Position[]){
-        let size =marks.length
-        if (size > 0){
-        for (let p of marks) {
-                if (blocks.testForBlock(TOP_SNOW, p)){
-                    blocks.place(AIR, p)
-                }
-	        }
-        }
-    }
+
 	//  build line from a serial of adjacent marks
 	function build_line_from_marks(marks: Position[], block: number = GRASS) {
 	    let end: Position;
@@ -236,7 +222,7 @@ namespace ebuilder{
 	//  clear all marks
 	function clear_marks(marks: Position[]) {
 	    while (marks.length) {
-	        _py.py_array_pop(marks)
+	        marks.pop()
 	    }
 	}
 	
@@ -423,19 +409,116 @@ namespace ebuilder{
 */
 	// private data 
 	let buildmarks:Position[] = []
+    let markshowpos:Position[] = []
 	let clonemarks:Position[] = []
     let increasemarks:Position[]=[]
     let rulers:Position[]=[]
+    let MARK_SHOW_BLK=TOP_SNOW
+
+	function show_a_mark(mark:Position,block:number){
+        blocks.place(block, mark)
+    }
+    function hide_a_mark(mark:Position){
+	    if (blocks.testForBlock(MARK_SHOW_BLK, mark)) {
+	        blocks.place(AIR, mark)
+            return
+	    }
+	    if (blocks.testForBlock(0x1004c, mark)) {
+	        blocks.place(AIR, mark)
+            return
+	    }
+	    if (blocks.testForBlock(0x2004c, mark)) {
+	        blocks.place(AIR, mark)
+            return
+	    }
+	    if (blocks.testForBlock(0x3004c, mark)) {
+	        blocks.place(AIR, mark)
+            return
+	    }
+	    if (blocks.testForBlock(0x4004c, mark)) {
+	        blocks.place(AIR, mark)
+            return
+	    }
+	    if (blocks.testForBlock(0x0004c, mark)) {
+	        blocks.place(AIR, mark)
+            return
+	    }
+	   
+    }
+    function hide_marks(){
+        let size =markshowpos.length
+        if (size > 0){
+        for (let p of markshowpos) {
+                hide_a_mark(p)
+            }
+	    }
+    }
 	/**
      * place a new mark
      * @param position the position to mark
      */
-    //% weight=111
+    //% weight=112
     //% show.defl=true
     //% block="place a mark at %position=minecraftCreatePosition and show %show"
     export function mark(position: Position =pos(0,0,0),show: boolean = true) {
-	    push_mark(buildmarks, position, show) 
+        let wpos =position.toWorld()
+	    push_mark(buildmarks, wpos) 
+        markshowpos.push(wpos)
+        if(show){
+            show_a_mark(wpos,MARK_SHOW_BLK)
+        }
 	}  
+
+	/**
+     * place a new sticky mark
+     * @param position the position to place the sticky mark
+     */
+    //% weight=111
+    //% show.defl=true
+    //% block="place a sticky mark at %position=minecraftCreatePosition and show %show"
+	export function mark2(position: Position, show: boolean = true) {
+        let wpos =position.toWorld()
+        let checkpos =[ pos(-1,0,0),pos(1,0,0),
+                        pos(0,0,-1),pos(0,0,1),
+                        pos(0,-1,0)
+                      ]
+        let findpos =undefined
+        for(let x of checkpos){
+            if (blocks.testForBlock(AIR,x)==false && blocks.testForBlock(WATER,x)==false){
+                findpos =x
+                break
+            }
+        }
+        if (findpos!=undefined){ 
+            push_mark(buildmarks,wpos.add(findpos)) 
+            markshowpos.push(wpos)
+            if(show){
+                let x = findpos.getValue(Axis.X)
+	            let y = findpos.getValue(Axis.Y)
+	            let z = findpos.getValue(Axis.Z)
+                if(x==-1){
+                    player.say(1)
+                    show_a_mark(wpos,0x1004c)
+                }
+                else if(x==1) {
+                    show_a_mark(wpos,0x2004c);
+                }
+                if(z==-1){
+                    show_a_mark(wpos,0x3004c);
+                }
+                else if(z==1){
+                    show_a_mark(wpos,0x4004c);
+                }
+                if(y==-1){
+                    show_a_mark(wpos,0x4c);
+                }
+            }
+        }
+        else{//if
+            error("error,no block nearby")
+        }
+	}
+
 	/**
      * remove the last mark
      */
@@ -444,6 +527,8 @@ namespace ebuilder{
     //% hidden
 	export function unmark() {
 	    pop_mark(buildmarks)
+        let showpos =pop_mark(markshowpos)
+        hide_a_mark(showpos)
 	}
 
 	/**
@@ -519,7 +604,7 @@ namespace ebuilder{
     //% weight=92
     //% hidden
 	export function hide_ruler() {
-        if(buildmarks.length >= 2){
+        if(marks_num(buildmarks) >= 2){
             hide_ruler_from_marks(buildmarks)
             reset_marks()
             return
@@ -559,6 +644,7 @@ namespace ebuilder{
         }
 	}
 
+
 	/**
      * commit changes and clear all marks
      */
@@ -566,10 +652,11 @@ namespace ebuilder{
     //% weight=100
     //% hidden
 	export function reset_marks() {
-        let size =buildmarks.length
+        let size =marks_num(buildmarks)
         if (size > 0){
-            hide_marks(buildmarks)
+            hide_marks()
 	        clear_marks(buildmarks)
+            clear_marks(markshowpos)
         }
 	}
 	
@@ -581,7 +668,7 @@ namespace ebuilder{
     //% hidden
 	export function mark_num() {
 
-	    return buildmarks.length
+	    return marks_num(buildmarks)
 	}
 
 
@@ -620,7 +707,7 @@ namespace ebuilder{
      * @param to the place to clone into
      * @param align if True,align automaticlly with the cloned space
      */
-    //% block="clone %to=minecraftCreatePosition align  %align"
+    //% block="clone to %to=minecraftCreatePosition align  %align"
     //% align.defl=true
     //% weight=60
     //% hidden
@@ -708,4 +795,4 @@ namespace ebuilder{
 }
 
 
-         
+            

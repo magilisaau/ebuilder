@@ -8,7 +8,7 @@ Description: the project is to help kids build house more efficiently and easily
 '''
     This sourcecode include TWO main files
     ---custom.ts: written in javascript, this is an extension which can be installed into Code Builder
-                  this can be used seperately
+    this can be used seperately
     ---main.py: written in python, implement a command list interface(CLI) and the graphical user interface(UI)
     
     ---buildAssistant.py: in python,this file has been obelete and no longer maintained, but it has been tested and can run seperately
@@ -21,7 +21,7 @@ def on_help():
     cmd_all=["ui","mark","mark2","umark","reset","wall","increase","decrease","clone","clear","setblock","setalign","blkmap","dbg","cube","hollowcube","plant","demo"]
     cmd_detail=[
         ["mark","mark the position where the player standing"],
-        ["mark2","compared with the mark cmd, it can mark the solid position near the player"],
+        ["mark2","compared with the mark cmd, it sticky to a block near the player"],
         ["umark","remove the last mark"],
         ["reset","hide and clear all marks"],
         ["wall","build walls between each two marks"],
@@ -82,19 +82,8 @@ def on_mark_handle():
 player.on_chat("mark", on_mark_handle)
 
 def on_mark2_handle():
-    checkpos =[ pos(-1,0,0),pos(1,0,0),
-                pos(0,0,-1),pos(0,0,1),
-                pos(0,-1,0),
-            ]
-    curpos =None
     ebuilder.acquire()
-    for x in checkpos:
-        if not blocks.test_for_block(AIR,x) and not blocks.test_for_block(WATER,x):
-            curpos =x
-            break
-    if curpos: 
-        ebuilder.mark(curpos,False)
-        blocks.place(147,pos(0,0,0))
+    ebuilder.mark2(player.position())
     ebuilder.release()
 player.on_chat("mark2", on_mark2_handle)
 
@@ -246,6 +235,13 @@ def on_item_interacted_mark():
     ebuilder.release()
 player.on_item_interacted(GOLDEN_BOOTS, on_item_interacted_mark)
 
+def on_item_interacted_mark2():
+    if not check_build_mode(): return
+    ebuilder.acquire()
+    ebuilder.mark2(player.position())
+    ebuilder.release()
+player.on_item_interacted(DIAMOND_BOOTS, on_item_interacted_mark2)
+
 def on_item_interacted_unmark():
     if not check_build_mode(): return
     ebuilder.acquire()
@@ -378,6 +374,7 @@ blocks.on_block_placed(0x40032, on_block_placed_south)
 
 # on stat,here
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_BOOTS, 1)
+mobs.give(mobs.target(ALL_PLAYERS),DIAMOND_BOOTS, 1)
 mobs.give(mobs.target(ALL_PLAYERS),IRON_BOOTS, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SWORD, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SHOVEL, 1)
@@ -387,7 +384,3 @@ mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_APPLE, 1)
 mobs.give(mobs.target(ALL_PLAYERS),MELON, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GLISTERING_MELON, 1)
 
-
-def on_chat():
-    player.say(pos(0,0,0).to_world())
-player.on_chat("jump", on_chat)
