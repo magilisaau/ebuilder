@@ -1,4 +1,4 @@
-									Minecraft Build Assistant Document
+									Minecraft ebuilder Document
 
 ​                                                                                      Magi, magilisaau@gmail.com, 2020.5.24
 
@@ -30,13 +30,13 @@ summon FallingSand ~ ~1 ~ {Time:1,Block:redstone_block,Riding:{id:FallingSand,Ti
 
 the relationship between them are 
 
-![software structure](.\pic\soft_structure.png)
+<img src=".\pic\soft_structure.png" style="zoom:80%;" />
 
 
 
 let's look at several concepts in the code first.
 
-**block:**  blocks are the smallest unit of building, every type of block is represented by a number, for example, 0 represents for air, 1: stone, 2:  grass block, 9: water,  for detail please refer to  https://github.com/magilisaau/minecraft_buildAssistant/blob/master/blockid.py
+**block:**  blocks are the smallest unit of building, every type of block is represented by a number, for example, 0 represents for air, 1: stone, 2:  grass block, 9: water,  for detail please refer to https://github.com/magilisaau/ebuilder/blob/master/blockid.py
 
 **mark**: mark is a position on the map in game which you have marked for later use. Thinking about building a wall. First step, mark a place. Then, mark another place. At last, build a wall between two marks. in this project, <u>*mark is used to select a building or a space.*</u>
 
@@ -87,7 +87,7 @@ As mentioned before, the code can only be used on Minecraft EE,   you can get th
 
 <img src=".\pic\import_url1.png" style="zoom:50%;" />
 
-3. paste https://github.com/magilisaau/minecraft_buildAssistant 
+3. paste https://github.com/magilisaau/ebuilder
 
 <img src=".\pic\import_url2.png" style="zoom:50%;" />
 
