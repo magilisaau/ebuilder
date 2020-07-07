@@ -25,6 +25,7 @@ def on_help():
         ["umark","remove the last mark"],
         ["reset","hide and clear all marks"],
         ["wall","build walls between each two marks"],
+        ["line","build lines between each two marks"],
         ["increase","increase n, increase n floors"],
         ["decrease","decrease n, decrease n floors"],
         ["clone","clone 0/1,clone the space enclosed by all marks to where the player stands,1:align 0: not align"],
@@ -390,8 +391,8 @@ blocks.on_block_placed(0x40032, on_block_placed_south) #TORCH FACING NORTH
 
 
 # on stat,here
+player.execute("clear")
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_BOOTS, 1)
-mobs.give(mobs.target(ALL_PLAYERS),DIAMOND_BOOTS, 1)
 mobs.give(mobs.target(ALL_PLAYERS),IRON_BOOTS, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SWORD, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SHOVEL, 1)
@@ -400,4 +401,5 @@ mobs.give(mobs.target(ALL_PLAYERS),TORCH, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_APPLE, 1)
 mobs.give(mobs.target(ALL_PLAYERS),MELON, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GLISTERING_MELON, 1)
+mobs.give(mobs.target(ALL_PLAYERS),DIAMOND_BOOTS, 1)
 

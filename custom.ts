@@ -499,6 +499,7 @@ namespace ebuilder{
         }
         if (findpos!=undefined){ 
             push_mark(data.buildmarks,wpos.add(findpos)) 
+            print("sticky mark succcess "+findpos)
             data.markshowpos.push(wpos)
             if(show){
                 let x = findpos.getValue(Axis.X)
@@ -731,6 +732,9 @@ namespace ebuilder{
 	        newpos = clone_from_marks(data.clonemarks, to, align)
             //player.teleport(newpos)
 	    }
+        else{
+            error("error, no object selected to clone")
+        }
 	}
 	/**
      * clear the cubic space enclosed by all marks
