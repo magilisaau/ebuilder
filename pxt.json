@@ -1,21 +1,16 @@
 {
-    "name": "minecraft_buildassistant",
+    "name": "ebuilder",
+    "description": "",
     "dependencies": {
         "core": "*",
         "builder": "*"
     },
     "files": [
-        "README.md",
         "main.blocks",
-        "main.py",
         "main.ts",
+        "README.md",
+        "main.py",
         "custom.ts"
     ],
-    "testFiles": [
-        "test.ts"
-    ],
-    "supportedTargets": [
-        "minecraft"
-    ],
-    "preferredEditor": "blocksprj"
+    "preferredEditor": "pyprj"
 }
