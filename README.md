@@ -1,4 +1,4 @@
-									Minecraft ebuilder Document
+	Minecraft ebuilder Document
 
 ​                                                                                      Magi, magilisaau@gmail.com, 2020.5.24
 
@@ -75,35 +75,9 @@ plant trees on the ground
 
 ## Import the code to your Minecraft game
 
-As mentioned before, the code can only be used on Minecraft EE,   you can get the game from https://education.minecraft.net/get-started/download/ , after logging in the game, press C key on your keyboard to open the coder builder, then follow the steps below.
+As mentioned before, the code can only be used on Minecraft EE,   you can get the game from https://education.minecraft.net/get-started/download/ , after logging in the game, press C key on your keyboard to open the coder builder, then import url https://github.com/magilisaau/ebuilder to your game,
 
-1. open your Code Builder in the Minecraft game, click import 
-
-<img src=".\pic\import.png" style="zoom: 67%;" />
-
-
-
-2. click Import URL
-
-<img src=".\pic\import_url1.png" style="zoom:50%;" />
-
-3. paste https://github.com/magilisaau/ebuilder
-
-<img src=".\pic\import_url2.png" style="zoom:50%;" />
-
-4. if import code successfully, you will see a new extension called EBUILDER, if no, check your network.
-
-<img src=".\pic\extension.png" style="zoom: 80%;" />
-
-5. run the game
-
-   <img src=".\pic\run.png" style="zoom:50%;" />
-
-   6. you will see a group of special block to use to build house
-
-      <img src=".\pic\run_successful.png" style="zoom:67%;" />
-
-
+about how to import the code to you game, please refer to the teaching video on youtube https://www.youtube.com/watch?v=j0soch-JSgI
 
 ### Command Line Interface
 
