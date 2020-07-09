@@ -4,6 +4,8 @@
 
 ​																					  youtube on ebuilder: https://youtu.be/V2RiOmHseGM
 
+​                                                                                      sample video: https://youtu.be/zU4bbt1ONbc
+
 ## Introduction
 
 This is a source code written in JavaScript and Python which runs on Microsoft Minecraft EE(education edition), the initial purpose to start the project is to help my kids to build house more efficiently, thus they can pay more attention on the design of house rather than the building work.
@@ -112,6 +114,8 @@ to use command line, run the game and open the chat window (press T key on your 
 ### Graphical User Interface
 
 to see how to use the ebuilder, please see the teaching video on youtube  https://youtu.be/V2RiOmHseGM
+
+sample video: Minecraft EE- build a underwater house in 6 minutes  https://youtu.be/zU4bbt1ONbc
 
 ![](.\pic\ui2.png)
 
