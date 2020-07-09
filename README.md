@@ -1,6 +1,8 @@
 	Minecraft ebuilder Document
 
-​                                                                                      Magi, magilisaau@gmail.com, 2020.5.24
+​                                                                                      Magi,  magilisaau@gmail.com, 2020.5.24				
+
+​																					  youtube on ebuilder: https://youtu.be/V2RiOmHseGM
 
 ## Introduction
 
@@ -109,6 +111,8 @@ to use command line, run the game and open the chat window (press T key on your 
 
 ### Graphical User Interface
 
+to see how to use the ebuilder, please see the teaching video on youtube  https://youtu.be/V2RiOmHseGM
+
 ![](.\pic\ui2.png)
 
 ```
@@ -178,10 +182,16 @@ step 4) right-click the golden sword
 
 
 
+### Extension
+
+custom.ts can be used seperately as an extension， as follows.
+
+![](.\pic\extension 2.png)
+
+![](.\pic\extension3.png)
+
+
+
 ### Co-development
 
 if you are interested in the project and would like to develop new features, please send email to magilisaau@gmail.com and tell me your github account , I will add your account to the project. 
-
-
-
-### 
