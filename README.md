@@ -1,10 +1,10 @@
 	Minecraft ebuilder Document
 
-​                                                                                      Magi,  magilisaau@gmail.com, 2020.5.24				
+ Magi,  magilisaau@gmail.com, 2020.5.24				
 
-​																					  youtube on ebuilder: https://youtu.be/V2RiOmHseGM
+ sample video- ebuilder, how to build an underwater house in 6 minutes: https://youtu.be/zU4bbt1ONbc
 
-​                                                                                      sample video: https://youtu.be/zU4bbt1ONbc
+ youtube on ebuilder: https://youtu.be/V2RiOmHseGM
 
 ## Introduction   
 
@@ -34,7 +34,7 @@ summon FallingSand ~ ~1 ~ {Time:1,Block:redstone_block,Riding:{id:FallingSand,Ti
 
 the relationship between them are 
 
-<img src=".\pic\soft_structure.png" style="zoom:80%;" />
+![](https://github.com/magilisaau/ebuilder/blob/master/pic/soft_structure.png?raw=true)
 
 
 
@@ -117,7 +117,7 @@ to see how to use the ebuilder, please see the teaching video on youtube  https:
 
 sample video: Minecraft EE- build a underwater house in 6 minutes  https://youtu.be/zU4bbt1ONbc
 
-![](.\pic\ui2.png)
+![](https://github.com/magilisaau/ebuilder/blob/master/pic/ui2.png?raw=true)
 
 ```
 GOLDEN BOOTS: 	add a mark
@@ -188,11 +188,15 @@ step 4) right-click the golden sword
 
 ### Extension
 
-custom.ts can be used seperately as an extension， as follows.
+custom.ts can be used seperately as an extension， as follows, when you import the project, there will
 
-![](.\pic\extension 2.png)
+be a new green blockset called EBUILDER, you can use it to program
 
-![](.\pic\extension3.png)
+![](https://github.com/magilisaau/ebuilder/blob/master/pic/extension2.png?raw=true)
+
+![](https://github.com/magilisaau/ebuilder/blob/master/pic/extension3.png?raw=true)
+
+
 
 
 
