@@ -1,10 +1,14 @@
 	Minecraft ebuilder Document
 
- Magi,  magilisaau@gmail.com, 2020.5.24				
+# Minecraft ebuilder Document
 
- sample video- ebuilder, how to build an underwater house in 6 minutes: https://youtu.be/zU4bbt1ONbc
+Magi,  magilisaau@gmail.com, 2020.5.24				
 
- youtube on ebuilder: https://youtu.be/V2RiOmHseGM
+how to build an underwater house in 6 minutes: https://youtu.be/zU4bbt1ONbc
+
+how to use ebuilder: https://youtu.be/V2RiOmHseGM
+
+how to import/install ebuilder extension to your minecraft:https://www.youtube.com/watch?v=j0soch-JSgI
 
 ## Introduction   
 
@@ -81,6 +85,8 @@ plant trees on the ground
 
 As mentioned before, the code can only be used on Minecraft EE,   you can get the game from https://education.minecraft.net/get-started/download/ , after logging in the game, press C key on your keyboard to open the coder builder, then import url https://github.com/magilisaau/ebuilder to your game,
 
+
+
 about how to import the code to you game, please refer to the teaching video on youtube https://www.youtube.com/watch?v=j0soch-JSgI
 
 ### Command Line Interface
@@ -120,17 +126,17 @@ sample video: Minecraft EE- build a underwater house in 6 minutes  https://youtu
 ![](https://github.com/magilisaau/ebuilder/blob/master/pic/ui2.png?raw=true)
 
 ```
-GOLDEN BOOTS: 	add a mark
-DIAMOND_BOOTS: 	add a sticky mark
-IRON BOOTS: 	umark/decrease a wall
-GOLDEN SWORD:	 build a wall/ increase a wall
-GOLDEN CARROT: 	choose a block
-GOLDEN TORCH:	 replace
-GOLDEN APPLE: 	clone
-GOLDEN SHOVEL: 	clear
-MELON: 			show ruler
-GLISTERING MELON: hide ruler
-GOLDEN_LEGGINGS: reset
+GOLDEN PICKAXE: 	add a mark (2020-08-09, replace boots with pickaxe)
+DIAMOND PICKAXE: 	add a sticky mark (2020-08-09, replace boots with pickaxe)
+IRON PICKAXE: 		umark/decrease a wall (2020-08-09, replace boots with pickaxe)
+GOLDEN SWORD:	 	build a wall/ increase a wall
+GOLDEN CARROT: 	 	choose a block
+GOLDEN TORCH:	 	replace
+GOLDEN APPLE: 	 	clone
+GOLDEN SHOVEL: 	 	clear
+MELON: 			 	show ruler
+GLISTERING MELON: 	hide ruler
+GOLDEN_LEGGINGS:  	reset
 ```
 
 **Pick a building block**:  before build a wall, you must choose what block to be used,  there are two ways to pick a block.  for example, if we use stone to build a wall, you can do as follows
@@ -161,8 +167,8 @@ step 4) input command "wall"
 ```
 way 2
 step 1) right-click the golden carrot to pick a block
-step 2) add a mark by right-click golden boots
-step 3) move to other position and add the second mark by right-click golden boots 
+step 2) add a mark by right-click golden pickaxe
+step 3) move to other position and add the second mark by right-click golden pickaxe 
 step 4) right-click the golden sword
 ```
 
@@ -171,15 +177,15 @@ step 4) right-click the golden sword
 **Clone a wall:**
 
 ```
-1. right-click the golden boots to add the first mark, and move to a new place
-2. right-click the golden boots to add the second mark, then move to the place
+1. right-click the golden pickaxe to add the first mark, and move to a new place
+2. right-click the golden pickaxe to add the second mark, then move to the place
 3. right-click the golden apple to clone the wall to the new place
 ```
 
 **Replace a type of block to another on a wall**
 
 ```
-1. pick a new block by right-click golden boots
+1. pick a new block by right-click golden pickaxe
 2. move to the front of the wall
 3. put a torch to one of the block to replace in front of you
 ```

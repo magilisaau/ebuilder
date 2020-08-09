@@ -1,4 +1,18 @@
-   /*
+ /*
+*******************************************************************************************************
+Copyright (c) 2020 magilisaau, magilisaau@gmail.com
+Author: Magi
+Contact: magilisaau@gmail.com
+CreateTime: 2020/04/20
+ModifyTime: 2020/6/28
+Description: the project is to help kids build house more efficiently and easily in the game minecraft
+*****************************MIT LICENSE, DO NOT CHANGE THE INFORMATION ABOVE***************************
+ebuilder document: https://github.com/magilisaau/ebuilder/blob/master/README.md
+how to build an underwater house in 6 minutes: https://youtu.be/zU4bbt1ONbc
+how to use ebuilder: https://youtu.be/V2RiOmHseGM
+how to import/install ebuilder extension to your minecraft:https://www.youtube.com/watch?v=j0soch-JSgI
+*/
+/*
 	Author: Magi
 	Contact: magilisaau@gmail.com
 	CreateTime: 2020/04/20

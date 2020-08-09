@@ -1,20 +1,26 @@
 '''
+*******************************************************************************************************
+Copyright (c) 2020 magilisaau, magilisaau@gmail.com
 Author: Magi
 Contact: magilisaau@gmail.com
 CreateTime: 2020/04/20
 ModifyTime: 2020/6/28
 Description: the project is to help kids build house more efficiently and easily in the game minecraft
+*****************************MIT LICENSE, DO NOT CHANGE THE INFORMATION ABOVE***************************
+
+Author: Magi
+Contact: magilisaau@gmail.com
+ModifyTime: 2020/08/09
+Description: to support minecraft 1.14, replace golden boots with golden pickaxe, replace iron pickaxe with iron ingot
+             replace diamond boots with diamond pickaxe
 '''
 '''
-    This sourcecode include TWO main files
-    ---custom.ts: written in javascript, this is an extension which can be installed into Code Builder
-    this can be used seperately
-    ---main.py: written in python, implement a command list interface(CLI) and the graphical user interface(UI)
-    
-    ---buildAssistant.py: in python,this file has been obelete and no longer maintained, but it has been tested and can run seperately
-                 , I use python in the begining,but later I found the extension for minecraft can only be written in javascript, So it was
-                 devided into custom.ts and main.py.
+ebuilder document: https://github.com/magilisaau/ebuilder/blob/master/README.md
+how to build an underwater house in 6 minutes: https://youtu.be/zU4bbt1ONbc
+how to use ebuilder: https://youtu.be/V2RiOmHseGM
+how to import/install ebuilder extension to your minecraft:https://www.youtube.com/watch?v=j0soch-JSgI
 '''
+
 class setting:
     buildblock =GRASS
 def on_help():
@@ -64,9 +70,9 @@ player.on_chat("help", on_help)
 
 def help_ui(): 
     player.say("* right-click the block below to use *")
-    player.say("GOLDEN BOOTS: add a mark")
-    player.say("DIAMOND_BOOTS: add a sticky mark")
-    player.say("IRON BOOTS: umark")
+    player.say("GOLD PICKAXE: add a mark")
+    player.say("DIAMOND PICKAXE: add a sticky mark")
+    player.say("IRON PICKAXE: umark")
     player.say("GOLDEN SWORD: build wall")
     player.say("GOLDEN CARROT: choose a block")
     player.say("GOLDEN TORCH: replace")
@@ -246,14 +252,14 @@ def on_item_interacted_mark():
     ebuilder.acquire()
     ebuilder.mark(player.position())
     ebuilder.release()
-player.on_item_interacted(GOLDEN_BOOTS, on_item_interacted_mark)
+player.on_item_interacted(GOLDEN_PICKAXE, on_item_interacted_mark)
 
 def on_item_interacted_mark2():
     if not check_build_mode(): return
     ebuilder.acquire()
     ebuilder.mark2(player.position())
     ebuilder.release()
-player.on_item_interacted(DIAMOND_BOOTS, on_item_interacted_mark2)
+player.on_item_interacted(DIAMOND_PICKAXE, on_item_interacted_mark2)
 
 def on_item_interacted_unmark():
     if not check_build_mode(): return
@@ -263,7 +269,7 @@ def on_item_interacted_unmark():
     else:
         ebuilder.decrease_wall(1)
     ebuilder.release()
-player.on_item_interacted(IRON_BOOTS, on_item_interacted_unmark)
+player.on_item_interacted(IRON_PICKAXE, on_item_interacted_unmark)
 
 def on_item_interacted_clear():
     if not check_build_mode(): return
@@ -392,8 +398,8 @@ blocks.on_block_placed(0x40032, on_block_placed_south) #TORCH FACING NORTH
 
 # on stat,here
 player.execute("clear")
-mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_BOOTS, 1)
-mobs.give(mobs.target(ALL_PLAYERS),IRON_BOOTS, 1)
+mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_PICKAXE, 1)
+mobs.give(mobs.target(ALL_PLAYERS),IRON_PICKAXE, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SWORD, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SHOVEL, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_CARROT, 1)
@@ -401,5 +407,5 @@ mobs.give(mobs.target(ALL_PLAYERS),TORCH, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_APPLE, 1)
 mobs.give(mobs.target(ALL_PLAYERS),MELON, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GLISTERING_MELON, 1)
-mobs.give(mobs.target(ALL_PLAYERS),DIAMOND_BOOTS, 1)
+mobs.give(mobs.target(ALL_PLAYERS),DIAMOND_PICKAXE, 1)
 
