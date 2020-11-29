@@ -1,4 +1,8 @@
 '''
+Copyright (c) 2020 magilisaau, magilisaau@gmail.com, MIT license
+ebuilder sample, how to build an underwater house in 6 minutes: https://youtu.be/zU4bbt1ONbc
+youtube on ebuilder: https://youtu.be/V2RiOmHseGM
+
 Author: Magi
 Contact: magilisaau@gmail.com
 CreateTime: 2020/04/20
@@ -9,17 +13,23 @@ Author: Magi
 Contact: magilisaau@gmail.com
 ModifyTime: 2020/5/17
 Description: bug fix, clear marks after clear/cube/hollowcube
+
+Author: Magi
+Contact: magilisaau@gmail.com
+ModifyTime: 2020/08/09
+Description: to support minecraft 1.14, replace golden boots and iron boots with gold ingot and iron ingot
 '''
+
 #help info
 def help_ui():
     player.say("---right-click the block below to build---")
-    player.say("GOLDEN BOOTS:   add a mark")
-    player.say("IRON BOOTS:  remove last mark or del one floor")
+    player.say("GOLD_INGOT:  add a mark")
+    player.say("IRON_INGOT:  remove last mark or del one floor")
     player.say("GOLDEN SWORD:   build wall or add one floor")
     player.say("GOLDEN LEGGINGS: reset all marks")
     player.say("GOLDEN CARROT:  choose the block under the player's feet")
-    player.say("GOLDEN TORCH:   replace the old block to the new one under the player's feet")
-    player.say("GOLDEN CHESTPLATE: clone to the place where the player is standing")
+    #player.say("GOLDEN TORCH:   replace the old block to the new one under the player's feet")
+    player.say("GOLDEN APPLE: clone to the place where the player is standing")
     player.say("GOLDEN SHOVEL: clear the cubic space enclosed by all marks")
 def on_help():
     cmd_all=["mark","umark","reset","wall","increase","decrease","clone","clear","setblock","setalign","blkmap","dbg","cube","hollowcube","plant","demo"]
@@ -145,7 +155,7 @@ def push_mark(marks=[pos(0,0,0)],curpos:Position=player.position(),mark_blk=TOP_
     if setting.buildline: show_build_line(curpos)
     blocks.place(mark_blk, curpos)
     #if blocks.test_for_block(AIR,curpos) or blocks.test_for_block(WATER,curpos):
-    #    blocks.place(mark_blk, curpos)
+        #    blocks.place(mark_blk, curpos)
 
 # undo last added mark
 def pop_mark(marks=[pos(0, 0, 0)],mark_blk=TOP_SNOW):
@@ -538,13 +548,14 @@ buildmarks = [pos(0, 0, 0)]
 clonemarks = [pos(0,0,0)]
 buildmarks.pop()
 clonemarks.pop()
-mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_BOOTS, 1)
-mobs.give(mobs.target(ALL_PLAYERS),IRON_BOOTS, 1)
+player.execute("clear")
+mobs.give(mobs.target(ALL_PLAYERS),GOLD_INGOT, 1)
+mobs.give(mobs.target(ALL_PLAYERS),IRON_INGOT, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SWORD, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_SHOVEL, 1)
 mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_CARROT, 1)
-mobs.give(mobs.target(ALL_PLAYERS),TORCH, 1)
-mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_CHESTPLATE, 1)
+#mobs.give(mobs.target(ALL_PLAYERS),TORCH, 1)
+mobs.give(mobs.target(ALL_PLAYERS),GOLDEN_APPLE, 1)
 ######################################### section three, user interface ##################################################
 '''
 section three can call functions in section one and section two, but can NOT be called by section one and section two
@@ -562,11 +573,11 @@ def on_item_interacted_mark():
     if not check_build_mode(): return
     acquire()
     if BuildState.buildstate==BuildState.DONE: 
-        reset_and_clear_state()       
+        reset_and_clear_state()
     on_mark(player.position())
     release()
 
-player.on_item_interacted(GOLDEN_BOOTS, on_item_interacted_mark)
+player.on_item_interacted(GOLD_INGOT, on_item_interacted_mark)
 
 def on_item_interacted_unmark():
     if not check_build_mode(): return
@@ -576,7 +587,7 @@ def on_item_interacted_unmark():
     if BuildState.buildstate==BuildState.DONE:
         on_decrease_wall(1)
     release()
-player.on_item_interacted(IRON_BOOTS, on_item_interacted_unmark)
+player.on_item_interacted(IRON_INGOT, on_item_interacted_unmark)
 
 def on_item_interacted_clear():
     if not check_build_mode(): return
@@ -617,7 +628,7 @@ def on_item_interacted_clone():
     release()
     #player.run_chat_command("clone")
     player.say("clone")
-player.on_item_interacted(GOLDEN_CHESTPLATE, on_item_interacted_clone)
+player.on_item_interacted(GOLDEN_APPLE, on_item_interacted_clone)
 
 def on_item_interacted_pick_block():
     curpos =player.position()
@@ -629,142 +640,20 @@ def on_item_interacted_pick_block():
     player.say("set replace block:  "+str(setting.replacedblock))
 player.on_item_interacted(GOLDEN_CARROT, on_item_interacted_pick_block)
 
-def on_block_placed_west():
-    checkpos =[ pos(0,1,0),
-                pos(-1,1,0),pos(-1,0,0),
-                pos(-2,1,0),pos(-2,0,0),
-                pos(-3,1,0),pos(-3,0,0),
-            ]
-    for x in checkpos:
-        if blocks.test_for_block(0x10032,x):
-            blocks.place(0x1004c,x)
-            x1 =x.to_world()
-            x2 =x1.add(pos(-1,0,0))
-            setting.replacedblock =detect_block_at_pos(x2)
-            acquire()
-            on_replace(setting.buildblock,setting.replacedblock)
-            reset_and_clear_state()
-            release()
-            break
-blocks.on_block_placed(0x10032, on_block_placed_west)
 
-def on_block_placed_east():
-    checkpos =[ pos(0,1,0),
-                pos(1,1,0),pos(1,0,0),
-                pos(2,1,0),pos(2,0,0),
-                pos(3,1,0),pos(3,0,0),
-            ]
-    for x in checkpos:
-        if blocks.test_for_block(0x20032,x):
-            blocks.place(0x2004c,x)
-            x1 =x.to_world()
-            x2 =x1.add(pos(1,0,0))
-            setting.replacedblock =detect_block_at_pos(x2)
-            acquire()
-            on_replace(setting.buildblock,setting.replacedblock)
-            reset_and_clear_state()
-            release()
-            break
-blocks.on_block_placed(0x20032, on_block_placed_east)
 
-def on_block_placed_north():
-    checkpos =[ pos(0,1,0),
-                pos(0,1,-1),pos(0,0,-1),
-                pos(0,1,-2),pos(0,0,-2),
-                pos(0,1,-3),pos(0,0,-3)
-                ]
-    for x in checkpos:
-        if blocks.test_for_block(0x30032,x):
-            blocks.place(0x3004c,x)
-            x1 =x.to_world()
-            x2 =x1.add(pos(0,0,-1))
-            setting.replacedblock =detect_block_at_pos(x2)
-            acquire()
-            on_replace(setting.buildblock,setting.replacedblock)
-            reset_and_clear_state()
-            release()
-            break
-blocks.on_block_placed(0x30032, on_block_placed_north)
 
-def on_block_placed_south():
-    checkpos =[ pos(0,1,0),
-                pos(0,1,1),pos(0,0,1),
-                pos(0,1,2),pos(0,0,2),
-                pos(0,1,3),pos(0,0,3),
-                ]
-    for x in checkpos:
-        if blocks.test_for_block(0x40032,x):
-            blocks.place(0x4004c,x)
-            x1 =x.to_world()
-            x2 =x.add(pos(0,0,1))
-            setting.replacedblock =detect_block_at_pos(x2)
-            acquire()
-            on_replace(setting.buildblock,setting.replacedblock)
-            reset_and_clear_state()
-            release()
-            break
-blocks.on_block_placed(0x40032, on_block_placed_south)
 
-######################  section four, a demo to build house using  ##############################
-class BuildAgent(Enum):
-    PLAYER = 0
-    BUILDER = 1
-    AGENT = 2
-buildagent = BuildAgent.PLAYER
 
-def shift(forward: number, up: number, left: number):
-    if buildagent == BuildAgent.PLAYER:
-        player.teleport(pos(forward, up, left))
-    elif buildagent == BuildAgent.BUILDER:
-        builder.shift(forward, up, left)
-    else:
-        agent.move(FORWARD,forward)
-        agent.move(UP,up)
-        agent.move(LEFT,left)
-        #loops.pause(1)
 
-def teleport_to(where: Position,direction:number=WEST):
-    if buildagent == BuildAgent.PLAYER:
-        player.teleport(where)
-    elif buildagent == BuildAgent.BUILDER:
-        builder.teleport_to(where)
-        builder.face(direction)
-    else:
-        agent.teleport(where,direction)
 
-def get_position():
-    if buildagent == BuildAgent.PLAYER:
-        return player.position()
-    elif buildagent == BuildAgent.BUILDER:
-        return builder.position()
-    else:
-        return agent.get_position()
 
-def demo_wall(face,blk,width,height=5):
-    teleport_to(player.position(),face)
-    for i in range(height):
-        blocks.place(blk,get_position()) #131228
-        for j in range(width-1):
-            shift(0,0,1)
-            blocks.place(blk,get_position())
-        shift(1,1,-width+1)
-    shift(0,0,-width)
-    for i in range(height):
-        blocks.place(blk,get_position()) #131228
-        for j in range(width-1):
-            shift(0,0,1)
-            blocks.place(blk,get_position())
-        shift(-1,1,-width+1)    
-    shift(0,0,width)
-    
-def on_demo():
-    global buildagent
-    setting.buildline =False
-    buildagent = BuildAgent.BUILDER
-    demo_wall(EAST,setting.buildblock,2,5)
-'''
-    buildagent = BuildAgent.AGENT
-    teleport_to(player.position(),NORTH)
-    demo_wall(2)
-'''
-player.on_chat("demo",on_demo)
+
+
+
+
+
+
+
+
+

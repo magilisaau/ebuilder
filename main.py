@@ -10,6 +10,13 @@ Description: the project is to help kids build house more efficiently and easily
 
 Author: Magi
 Contact: magilisaau@gmail.com
+ModifyTime: 2020/29/11
+Description: 1. Fix compile err on the latest MakeCode
+             2. Minecraft seems not support importing from github any more, so I add a single project file
+			 minecraft-ebuilder.mkcd for user to import form local computer/ipad
+
+Author: Magi
+Contact: magilisaau@gmail.com
 ModifyTime: 2020/08/09
 Description: to support minecraft 1.14, replace golden boots with golden pickaxe, replace iron pickaxe with iron ingot
              replace diamond boots with diamond pickaxe
@@ -321,7 +328,7 @@ player.on_item_interacted(GOLDEN_CARROT, on_item_interacted_pick_block)
 def on_item_interacted_melon():
     if not check_build_mode(): return
     ebuilder.acquire()
-    ebuilder.show_ruler()
+    ebuilder.show_ruler(pos(0,0,0))
     ebuilder.release()
 player.on_item_interacted(MELON, on_item_interacted_melon)
 
@@ -344,7 +351,7 @@ def detect_area(curpos:Position,block:number):
     ebuilder.mark(curpos.add(pos(x1,y1,z1)),False)
     ebuilder.mark(curpos.add(pos(x2,y2,z2)),False)
 
-def do_replace(checkpos, checkTorch, newTorch, relativePos):
+def do_replace(checkpos=[pos(0,0,0)], checkTorch=0x10032, newTorch=0x1004c, relativePos=pos(0,0,0)):
     for x in checkpos:
         x1 =x.to_world()
         if blocks.test_for_block(checkTorch,x):
